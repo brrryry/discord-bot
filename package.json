@@ -1,0 +1,23 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "A more professional version for a previous discord bot!",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^12.5.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YouLikeCats/discord-bot.git"
+  },
+  "author": "YouLikeCats",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YouLikeCats/discord-bot/issues"
+  },
+  "homepage": "https://github.com/YouLikeCats/discord-bot#readme"
+}
