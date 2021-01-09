@@ -4,7 +4,12 @@
   "description": "A more professional version for a previous discord bot!",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^12.5.1"
+    "better-sqlite3": "^7.1.2",
+    "discord.js": "^12.5.1",
+    "fs": "0.0.1-security",
+    "request": "^2.88.2",
+    "sqlite": "^4.0.19",
+    "sqlite3": "^5.0.1"
   },
   "devDependencies": {},
   "scripts": {
