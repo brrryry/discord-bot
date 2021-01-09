@@ -7,10 +7,6 @@ exports.run = async (client, message, args, level) => {
     let Embed = new Discord.MessageEmbed();
     let roles = [];
 
-
-
-
-
       var member1 = message.member;
       var id = member1.id
 
@@ -94,5 +90,4 @@ exports.config = {
   description: "Gets a server profile!",
   category: "Misc",
   permissionLevel: 0,
-  guildLevel: 1
 };

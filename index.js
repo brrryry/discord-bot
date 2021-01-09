@@ -225,7 +225,7 @@ client.on("message", async message => {
           message.guild.channels.cache.get(modlogchannelid).send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "uban", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "U-Ban", 0, "Spamming [Auto]", now]);
           message.member.ban();
         } else if (muteCase == 5) { //appealable ban
           message.author.send(`You were banned (appealable) for: Spamming [Auto] (x${muteCase})`);
@@ -233,7 +233,7 @@ client.on("message", async message => {
           message.guild.channels.cache.get(modlogchannelid).send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "aban", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "A-Ban", 0, "Spamming [Auto]", now]);
           message.member.ban();
         } else if (muteCase == 4) { //kick
           message.author.send(`You were kicked for: Spamming [Auto] (x${muteCase})`);
@@ -241,7 +241,7 @@ client.on("message", async message => {
           message.guild.channels.cache.get(modlogchannelid).send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "kick", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "Kick", 0, "Spamming [Auto]", now]);
           message.member.kick();
         } else { //mute incrementing by 120 minutes and starting at 120
           message.author.send(`You were muted (${muteCase * 120} minutes) for: Spamming [Auto] (x${muteCase})`);
@@ -249,7 +249,7 @@ client.on("message", async message => {
           message.guild.channels.cache.get(modlogchannelid).send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "mute", muteCase * 120, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, `Mute`, `${muteCase * 120} minutes`, "Spamming [Auto]", now]);
 
           const mutedRole = message.guild.roles.cache.find(r => r.name === 'Muted');
           message.member.roles.add(mutedRole);
@@ -303,7 +303,8 @@ function updateLevelRoles(member, level) {
   for(const id of levelRolesIDs) {
     var rolePush = member.guild.roles.cache.get(id);
     levelRoles.push(rolePush);
-    if(member.roles.cache.find(r => r.id === id)) member.roles.remove(r);
+    member.roles.remove(rolePush);
+
   }
 
   //calculations
