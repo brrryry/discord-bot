@@ -109,7 +109,6 @@ client.on("messageReactionAdd", async (reaction, user) => {
   console.log(reaction.emoji.identifier);
   for(var i = 0; i < identifiers.length; i++) {
     let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
-    console.log(reactionRole.id);
     if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") reaction.message.guild.members.cache.get(user.id).roles.add(reactionRole);
   }
 })
