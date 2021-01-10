@@ -20,6 +20,6 @@ exports.config = {
   name: "purge",
   usage: "purge <number>",
   description: "Purge 1-100 messages!",
-  category: "Moderation",
-  permissionLevel: 5,
+  category: "moderation",
+  permissionLevel: 5
 };

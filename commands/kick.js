@@ -4,7 +4,7 @@ exports.run = async (client, message, args, level) => {
   var db = new sql.Database("db.sqlite");
   const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
 
-  if(!args[0]) return message.reply(`you must include the user to warn! Try again.`);
+  if(!args[0]) return message.reply(`you must include the user to kick! Try again.`);
   if(!args[1]) return message.reply(`you must give a reason! Try again.`);
 
   var user = message.mentions.users.first();
@@ -34,19 +34,20 @@ exports.run = async (client, message, args, level) => {
       timeZone: "America/New_York"
     });
 
-    db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, [message.author.id, user.id, "Warn", 0, reason, now]);
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Warned.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
+    db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, [message.author.id, user.id, "Kick", 0, reason, now]);
+    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Kicked.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
     message.guild.channels.cache.get(modlogchannelid).send(embed);
-    message.mentions.users.first().send("You were warned for: " + reason);
+    message.mentions.users.first().send("You were kicked for: " + reason);
+    message.mentions.member.first().kick();
     message.channel.send("Moderation Log Successful.")
     return;
 }
 
 
 exports.config = {
-  name: "warn",
-  usage: "warn <user> <reason>",
-  description: "Warn a user!",
+  name: "kick",
+  usage: "kick <user> <reason>",
+  description: "Kick a user!",
   category: "moderation",
-  permissionLevel: 5,
+  permissionLevel: 5
 };

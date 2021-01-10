@@ -31,7 +31,7 @@ exports.config = {
   name: "announce",
   usage: "announce <channel> <message>",
   description: "THE BOT SHALL SPEAK!",
-  category: "Misc",
+  category: "misc",
   permissionLevel: 10,
   guildLevel: 1
 };

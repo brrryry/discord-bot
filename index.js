@@ -274,6 +274,7 @@ client.on("message", async message => {
 
   const args = message.content.slice(prefix.length).split(" ");
   const command = args.shift().toLowerCase();
+  console.log(command);
 
   //level analysis
   var permissionLevel = 0;
@@ -282,11 +283,12 @@ client.on("message", async message => {
 
 
   //actually execute commandFiles
+  if(message.author.bot) return;
   try {
     let commandFile = require(`./commands/${command}.js`);
     if(permissionLevel >= commandFile.config.permissionLevel) commandFile.run(client, message, args, permissionLevel);
   } catch (error) {
-    console.log(error.stack);
+    console.log(error);
     message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!")
   }
 });

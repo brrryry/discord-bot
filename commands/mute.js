@@ -6,7 +6,7 @@ const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechanneli
 exports.run = (client, message, args, level) => {
     if(!args[0]) return message.reply('you must include the user to mute! Try again.');
 
-    var user = message.mentions.members.first();
+    var user = message.mentions.users.first();
 
     if(user == null || user == undefined) {
       try {
@@ -93,8 +93,8 @@ exports.run = (client, message, args, level) => {
 
 exports.config = {
   name: "mute",
-  usage: "mute <user> <time amount> <time unit> <reason>",
+  usage: "mute <user> <time amount+ time unit> <reason>",
   description: "Mute a User!",
-  category: "Moderation",
-  permissionLevel: 5,
+  category: "moderation",
+  permissionLevel: 5
 };

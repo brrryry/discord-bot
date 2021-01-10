@@ -88,6 +88,6 @@ exports.config = {
   name: "profile",
   usage: "profile <user (optional)>",
   description: "Gets a server profile!",
-  category: "Misc",
-  permissionLevel: 0,
+  category: "misc",
+  permissionLevel: 0
 };

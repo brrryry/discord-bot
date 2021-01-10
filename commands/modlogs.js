@@ -20,40 +20,28 @@ exports.run = async (client, message, args, level) => {
       var embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
       var value = "";
       var count = 0;
-      var totalcount = 0;
+
       rows.forEach(row => {
-        var reasonCheck = row.reason;
         var rowMuteTime = row.modtype;
-        if(row.muteTime != 0) rowMuteTime = `Mute (${row.muteTime})`;
-        var totalStatement = `\n\n**CASE: **${row.key}\n**TYPE: **${rowMuteTime}\n**MODERATOR: **<@!${row.moderator}>\n**OFFENDER: **<@!${row.offender}>\n**REASON: **${reasonCheck}\n**TIME: **${row.time}`;
-        totalcount++;
-        if(totalStatement.length + value.length > 2048) {
+        if(row.muteTime != "0") rowMuteTime = `Mute (${row.muteTime})`;
+        else if (row.modtype == "uban") rowMuteTime = `Ban (Unappealable)`;
+        else if (row.modtype == "aban") rowMuteTime = `Ban (Appealable)`;
+        value = value + `\n\n**CASE: **${row.key}\n**TYPE: **${rowMuteTime}\n**MODERATOR: **<@!${row.moderator}>\n**OFFENDER: **<@!${row.offender}>\n**REASON: **${row.reason}\n**TIME: **${row.time}`;
+        count++;
+
+        if(count % 5 == 0 && count != 0) {
           embed.setDescription(value);
           message.channel.send(embed);
           embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
-          count = 0;
-          var rowMuteTime = row.modtype;
-          if(row.muteTime != 0) rowMuteTime = `Mute (${row.muteTime})`;
-          value = `\n\n**CASE: **${row.key}\n**TYPE: **${rowMuteTime}\n**MODERATOR: **<@!${row.moderator}>\n**OFFENDER: **<@!${row.offender}>\n**REASON: **${reasonCheck}\n**TIME: **${row.time}`;
-          count++;
-        } else {
-          var rowMuteTime = row.modtype;
-          if(row.muteTime != 0) rowMuteTime = `Mute (${row.muteTime})`;
-          value = value + `\n\n**CASE: **${row.key}\n**TYPE: **${rowMuteTime}\n**MODERATOR: **<@!${row.moderator}>\n**OFFENDER: **<@!${row.offender}>\n**REASON: **${reasonCheck}\n**TIME: **${row.time}`;
-          count++;
-        }
-        if(count == 5) {
-          embed.setDescription(value);
-          message.channel.send(embed);
-          embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
-          count = 0;
           value = "";
         }
       });
 
+      if(count == 0) return message.channel.send("No modlogs were found!");
       embed.setDescription(value);
       message.channel.send(embed);
-      message.channel.send(totalcount + " modlogs found!");
+
+      message.channel.send(count + " modlogs found!");
     });
 }
 
@@ -61,6 +49,6 @@ exports.config = {
   name: "modlogs",
   usage: "modlogs <user/id>",
   description: "Gets the moderation logs of a spefic user!",
-  category: "Moderation",
-  permissionLevel: 5,
+  category: "moderation",
+  permissionLevel: 5
 };
