@@ -102,20 +102,23 @@ client.on("messageDelete", async message => {
 
 //identifiers and reaction role names
 var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE"];
-var reactionRoleNames = ["Youtube/Twitch Enthusiast", "Voter", "Game Dev Enthusiast"];
+var reactionRoleNames = ["797261727723945985", "797259962693976066", "797259281057054760"];
 
 //on message react (used for reaction roles)
 client.on("messageReactionAdd", async (reaction, user) => {
   console.log(reaction.emoji.identifier);
   for(var i = 0; i < identifiers.length; i++) {
-    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004")   reaction.message.guild.members.cache.get(user.id).roles.add(reaction.message.guild.roles.cache.find(r => r.name === reactionRoleNames[i]));
+    let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
+    console.log(reactionRole.id);
+    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") reaction.message.guild.members.cache.get(user.id).roles.add(reactionRole);
   }
 })
 
-client.on("messageReactionAdd", async (reaction, user) => {
+client.on("messageReactionRemove", async (reaction, user) => {
   console.log(reaction.emoji.identifier);
   for(var i = 0; i < identifiers.length; i++) {
-    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004")   reaction.message.guild.members.cache.get(user.id).roles.remove(reaction.message.guild.roles.cache.find(r => r.name === reactionRoleNames[i]));
+    let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
+    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") reaction.message.guild.members.cache.get(user.id).roles.remove(reactionRole);
   }
 })
 
