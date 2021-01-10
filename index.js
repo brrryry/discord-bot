@@ -44,6 +44,9 @@ for(const file of commandFiles) {
 client.on('ready', (reaction, user) => {
   client.user.setActivity(` ${status}`, {type: 'PLAYING'}); //set status of bot when it's online
 
+  //fetch message for reaction roles
+  client.guilds.cache.get("796168991458066453").channels.cache.get("797261159035306004").messages.fetch("797649294243921961");
+
   console.log("Bot startup successful!");
 });
 
@@ -81,7 +84,7 @@ client.on("guildMemberRemove", async member => {
 
 //client on edited message
 client.on("messageUpdate", async (oldmessage, newmessage) => {
-  if(oldmessage.content === newmessage.content || omessage.author.bot) return;
+  if(oldmessage.content === newmessage.content || oldmessage.author.bot) return;
   var messageChannel = message.guild.channels.cache.get(messagechannelid);
 
   var embed = new Discord.MessageEmbed().setTitle("Message Edited").setColor("#ffff00").setDescription(`User: <@!${newmessage.member.id}>\nChannel: <#${newmessage.channel.id}>\n\nOld Message:\n${oldmessage.content}\n\nNew Message:\n${newmessage.content}`);
@@ -95,6 +98,25 @@ client.on("messageDelete", async message => {
 
   var embed = new Discord.MessageEmbed().setTitle("Message Deleted").setColor("#ff0000").setDescription(`User: <@!${message.member.id}>\nChannel: <#${message.channel.id}>\nMessage:\n${message}`);
   return messageChannel.send(embed);
+})
+
+//identifiers and reaction role names
+var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE"];
+var reactionRoleNames = ["Youtube/Twitch Enthusiast", "Voter", "Game Dev Enthusiast"];
+
+//on message react (used for reaction roles)
+client.on("messageReactionAdd", async (reaction, user) => {
+  console.log(reaction.emoji.identifier);
+  for(var i = 0; i < identifiers.length; i++) {
+    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004")   reaction.message.guild.members.cache.get(user.id).roles.add(reaction.message.guild.roles.cache.find(r => r.name === reactionRoleNames[i]));
+  }
+})
+
+client.on("messageReactionAdd", async (reaction, user) => {
+  console.log(reaction.emoji.identifier);
+  for(var i = 0; i < identifiers.length; i++) {
+    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004")   reaction.message.guild.members.cache.get(user.id).roles.remove(reaction.message.guild.roles.cache.find(r => r.name === reactionRoleNames[i]));
+  }
 })
 
 //client on message send
