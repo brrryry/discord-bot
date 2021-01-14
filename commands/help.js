@@ -16,7 +16,7 @@ exports.run = (client, message, args, level) => {
         }
       }
 
-      if(outputValue == `\`\`\`===<${args[0].toUpperCase()}>==\n`) return message.reply("that isn't a valid category OR none of the commands are ones that you can use! Try again.");
+      if(outputValue == `\`\`\`ARM===<${args[0].toUpperCase()}>===\n`) return message.reply("that isn't a valid category OR none of the commands are ones that you can use! Try again.");
 
       return message.channel.send(outputValue + "```");
 

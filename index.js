@@ -156,10 +156,7 @@ client.on("message", async message => {
     for(var i = 0; i < xpMessage.length; i++) {
       if(!alreadyLooped && (notInitYet || (message.author.id === xpMessage[i].author && date.getTime() - xpMessage[i].lastTime >= 1000 * 60))) { //more than 60 seconds
         //set and add xp
-        xpMessage.push({
-          "author": message.author.id,
-          "lastTime": date.getTime
-        });
+        xpMessage[i].lastTime = date.getTime();
         if(xpMessage.length >= 500) xpMessage.shift();
 
         var randomXP = Math.floor(Math.random() * 15) + 10;
