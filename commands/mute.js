@@ -71,7 +71,7 @@ exports.run = (client, message, args, level) => {
     var muteStatement = `${muteTime} ${unit}`;
     if(duration == "Permanent") muteStatement = "Permanent";
 
-    db.run("INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)", [message.author.id, user.id, "Mute", muteStatement, reason, now]);
+    db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "Mute", muteStatement, reason, now]);
     //message.reply("Warn Suceeded.");
 
 
@@ -79,7 +79,7 @@ exports.run = (client, message, args, level) => {
     const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Muted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Mute (${duration})`).addField("Reason: ", reason);
 
     let mutedRole = message.guild.roles.cache.find(role => role.name == "Muted");
-    message.mentions.members.first().roles.add(mutedRole);
+    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
     if(muteTime * timeMultiply * 1000 <= 2073600000) {
       setTimeout(() => {message.mentions.members.first().roles.remove(mutedRole);}, muteTime * timeMultiply * 1000);
     }

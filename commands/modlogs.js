@@ -5,17 +5,20 @@ const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechanneli
 
 exports.run = async (client, message, args, level) => {
 
+
     var user = message.mentions.users.first();
 
-    if(user == null || user == undefined) {
+
+
+    if(user == null || user === undefined) {
       try {
         user = client.users.cache.get(args[0]);
       } catch (error) {
-      return message.reply('Couldn\'t get a Discord user with this userID!3');
+        return message.reply('Couldn\'t get a Discord user with this userID!3');
       }
     }
 
-    db.all(`SELECT * FROM modlogs WHERE offender = "${user.id}"`, (err, rows) => {
+    db.all(`SELECT * FROM modlogs WHERE offender = "${user.id}" AND guild = "${message.guild.id}"`, (err, rows) => {
       if(!rows) return message.reply("no logs were found!");
       var embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
       var value = "";
@@ -50,5 +53,5 @@ exports.config = {
   usage: "modlogs <user/id>",
   description: "Gets the moderation logs of a spefic user!",
   category: "moderation",
-  permissionLevel: 5
+  permissionLevel: 5,
 };

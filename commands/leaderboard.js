@@ -5,7 +5,7 @@ const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechanneli
 
 exports.run = (client, message, args, level) => {
 
-    db.all(`SELECT * FROM xp ORDER BY xpcount DESC LIMIT 15`, (err, rows) => {
+    db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC LIMIT 15`, (err, rows) => {
       var embed = new Discord.MessageEmbed().setTitle("Most Active Members").setFooter("Our most active members!");
       var value = "";
       var count = 0;

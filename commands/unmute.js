@@ -39,12 +39,12 @@ exports.run = (client, message, args, level) => {
     if(!message.mentions.members.first().roles.cache.find(r => r.name === 'Muted')) return message.reply("this person isn't muted!");
     else message.mentions.members.first().roles.remove(mutedRole);
 
-    db.run("INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)", [message.author.id, user.id, "Unmute", "0", reason, now]);
+    db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "Unmute", "0", reason, now]);
 
     const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Unmuted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Mute (${duration})`).addField("Reason: ", reason);
 
 
-    message.guild.channels.cache.get(modlogchannelid).send(embed);
+  message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
     message.mentions.users.first().send("You were muted (" + muteStatement + ") for: " + reason);
     message.channel.send("Moderation Log Successful.")
     return;

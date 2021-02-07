@@ -34,9 +34,9 @@ exports.run = async (client, message, args, level) => {
       timeZone: "America/New_York"
     });
 
-    db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, [message.author.id, user.id, "aban", 0, reason, now]);
+    db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, message.author.id, user.id, "aban", 0, reason, now]);
     const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Banned.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
-    message.guild.channels.cache.get(modlogchannelid).send(embed);
+    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
     message.mentions.users.first().send("You were banned (appealable) for: " + reason);
     message.mentions.members.first().ban();
     message.channel.send("Moderation Log Successful.")

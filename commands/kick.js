@@ -19,7 +19,7 @@ exports.run = async (client, message, args, level) => {
   const reason = args.slice(1).join(" ");
   if(user == null || user == undefined) return message.reply("this user cannot be found!");
 
-  if(user.roles.cache.find(r => r.name === "Staff") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+  if(user.roles != null && user.roles.cache.find(r => r.name === "Staff") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
 
   var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
@@ -34,11 +34,11 @@ exports.run = async (client, message, args, level) => {
       timeZone: "America/New_York"
     });
 
-    db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, [message.author.id, user.id, "Kick", 0, reason, now]);
+    db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, message.author.id, user.id, "Kick", 0, reason, now]);
     const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Kicked.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
-    message.guild.channels.cache.get(modlogchannelid).send(embed);
+    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
     message.mentions.users.first().send("You were kicked for: " + reason);
-    message.mentions.member.first().kick();
+    message.mentions.members.first().kick();
     message.channel.send("Moderation Log Successful.")
     return;
 }

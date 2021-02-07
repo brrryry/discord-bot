@@ -17,12 +17,14 @@ let xpMessage = [];
 
 messageLogs.push({
     "message": "1",
+    "guild": "1",
     "author": "1",
     "time": "1"
 });
 
 xpMessage.push({
   "author": "1",
+  "guild": "1",
   "lastTime": "1"
 });
 
@@ -52,40 +54,47 @@ client.on('ready', (reaction, user) => {
 
 //client on member join
 client.on("guildMemberAdd", async member => {
-  var welcomeChannel = member.guild.channels.cache.get(gatewaychannelid); //welcome channel
-  welcomeChannel.send(`<@!${member.id}> has just joined the server!`);
+  var welcomeChannel = member.guild.channels.cache.find(c => c.name == "server-gateway"); //welcome channel
+  if(welcomeChannel != null) welcomeChannel.send(`<@!${member.id}> has just joined the server!`); //only accessible through dev server
 
-  var memberRole = member.guild.roles.cache.get("797260531378552842");
-  member.roles.add(memberRole);
+  if(member.guild.id == "796168991458066453") {
+    var memberRole = member.guild.roles.cache.get("797260531378552842");
+    member.roles.add(memberRole);
+  }
+
+
   //calculate levels upon joining with await/async stuff
   let setLevelOnJoinPromise = new Promise((resolve) => {
     db.all(`SELECT * FROM xp WHERE id = "${member.id}"`, (err, rows) => {
       if(rows.length == 0) {
         updateLevelRoles(member, 0);
-        db.run(`INSERT INTO xp (id, level, xpcount) VALUES (?, ?, ?)`, [member.id, 0, 0]);
+        db.run(`INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
       } else {
         rows.forEach(row => {
-          updateLevelRoles(member, row.level);
+          if(member.guild.id == "796168991458066453") updateLevelRoles(member, row.level);
         });
       }
     });
-
-    setTimeout(() => resolve("!"), 1000);
+      setTimeout(() => resolve("!"), 1000);
   })
 
   let setLevelOnJoinResult = await setLevelOnJoinPromise;
+
+
+
 });
 
 //client on member remove
 client.on("guildMemberRemove", async member => {
-  var goodbyeChannel = member.guild.channels.cache.get(gatewaychannelid);
-  goodbyeChannel.send(`<@!${member.id}> just left the server!`);
+  var goodbyeChannel = member.guild.channels.cache.find(c => c.name == "server-gateway");
+  if(goodbyeChannel != null) goodbyeChannel.send(`<@!${member.id}> just left the server!`);
 });
 
 //client on edited message
 client.on("messageUpdate", async (oldmessage, newmessage) => {
+  if(oldmessage.author.bot) return;
   if(oldmessage.content === newmessage.content || oldmessage.author.bot) return;
-  var messageChannel = message.guild.channels.cache.get(messagechannelid);
+  var messageChannel = message.guild.channels.cache.find(c => c.name == "message-logs");
 
   var embed = new Discord.MessageEmbed().setTitle("Message Edited").setColor("#ffff00").setDescription(`User: <@!${newmessage.member.id}>\nChannel: <#${newmessage.channel.id}>\n\nOld Message:\n${oldmessage.content}\n\nNew Message:\n${newmessage.content}`);
   return messageChannel.send(embed);
@@ -94,7 +103,7 @@ client.on("messageUpdate", async (oldmessage, newmessage) => {
 //client on deleted message
 client.on("messageDelete", async message => {
   if(message.author.bot) return;
-  var messageChannel = message.guild.channels.cache.get(messagechannelid);
+  var messageChannel = message.guild.channels.cache.find(c => c.name == "message-logs");
 
   var embed = new Discord.MessageEmbed().setTitle("Message Deleted").setColor("#ff0000").setDescription(`User: <@!${message.member.id}>\nChannel: <#${message.channel.id}>\nMessage:\n${message}`);
   return messageChannel.send(embed);
@@ -135,6 +144,7 @@ client.on("message", async message => {
 
   messageLogs.push({
       "message": message.content,
+      "guild": message.guild.id,
       "author": message.author.id,
       "time": date.getTime()
   });
@@ -147,18 +157,19 @@ client.on("message", async message => {
   if(xpSystemOn && !message.author.bot) {
     var notInitYet = true;
     for(var i = 0; i < xpMessage.length; i++) {
-      if(message.author.id == xpMessage[i].author) notInitYet = false;
+      if(message.author.id == xpMessage[i].author && message.guild.id == xpMessage[i].guild) notInitYet = false;
     }
 
     var alreadyLooped = false;
 
 
     for(var i = 0; i < xpMessage.length; i++) {
-      if(!alreadyLooped && (notInitYet || (message.author.id === xpMessage[i].author && date.getTime() - xpMessage[i].lastTime >= 1000 * 60))) { //more than 60 seconds
+      if(!alreadyLooped && (notInitYet || (message.author.id === xpMessage[i].author && date.getTime() - xpMessage[i].lastTime >= 60000))) { //more than 60 seconds
         //set and add xp
         if(notInitYet) {
           xpMessage.push({
             "author": message.author.id,
+            "guild": message.guild.id,
             "lastTime": date.getTime()
           })
         }
@@ -167,11 +178,11 @@ client.on("message", async message => {
 
         var randomXP = Math.floor(Math.random() * 15) + 10;
         let xpPromise = new Promise(resolve => {
-          db.get(`SELECT * FROM xp WHERE id = "${message.author.id}"`, (err, row) => {
-            db.run(`UPDATE xp SET xpcount = "${row.xpcount}" + "${randomXP}" WHERE id = "${message.author.id}"`);
+          db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
+            db.run(`UPDATE xp SET xpcount = "${row.xpcount}" + "${randomXP}" WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`);
             if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up
-              db.run(`UPDATE xp SET level = "${row.level}" + 1 WHERE id = "${message.member.id}"`);
-              updateLevelRoles(message.member, row.level + 1);
+              db.run(`UPDATE xp SET level = "${row.level}" + 1 WHERE id = "${message.member.id} AND guild = "${message.guild.id}"`);
+              if(message.member.guild.id === "796168991458066453") updateLevelRoles(message.member, row.level + 1);
               message.reply(`you just reached level ${row.level + 1}! Congratulations!`);
             }
           });
@@ -190,8 +201,8 @@ client.on("message", async message => {
   if(antiSpamOn && !message.author.bot) { //anti spam system is on
     var msgCount = 0; //message count
     for(var i = 0; i < messageLogs.length; i++) {
-      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000) msgCount++; //6 msg in 3 seconds
-      else if (messageLogs[i].author == message.author.id && messageLogs[i].message == message.content && date.getTime() - messageLogs[i].time <= 15000) msgCount++; //6 repeated msgs in 15 seconds
+      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000 && messageLogs[i].guild == message.guild.id) msgCount++; //6 msg in 3 seconds
+      else if (messageLogs[i].author == message.author.id && messageLogs[i].message == message.content && date.getTime() - messageLogs[i].time <= 15000 && messageLogs[i].guild == message.guild.id) msgCount++; //6 repeated msgs in 15 seconds
     }
 
     var warnSpam = false;
@@ -218,7 +229,7 @@ client.on("message", async message => {
       if((warnCount + 1) % 3 == 0 && warnCount != 0) {
         //mute!
         let muteCountPromise = new Promise(resolve => {
-          db.all(`SELECT * FROM modlogs WHERE offender = "${message.author.id}" AND reason = "Spamming [Auto]"`, (error, rows) => {
+          db.all(`SELECT * FROM modlogs WHERE offender = "${message.author.id}" AND reason = "Spamming [Auto]" AND guild = ${message.guild.id}`, (error, rows) => {
             //how many times has the person previously been muted?
             if(!rows) muteCount = 0;
             else rows.forEach(row => muteCount++);
@@ -249,34 +260,34 @@ client.on("message", async message => {
         if(muteCase >= 6) { //if this happens more than 6 times, unappealable ban
           message.author.send(`You were banned (unappealable) for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was U-Banned.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.get(modlogchannelid).send(embed);
+          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "U-Ban", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "U-Ban", 0, "Spamming [Auto]", now]);
           message.member.ban();
         } else if (muteCase == 5) { //appealable ban
           message.author.send(`You were banned (appealable) for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was A-Banned.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.get(modlogchannelid).send(embed);
+          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "A-Ban", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "A-Ban", 0, "Spamming [Auto]", now]);
           message.member.ban();
         } else if (muteCase == 4) { //kick
           message.author.send(`You were kicked for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was Kicked.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.get(modlogchannelid).send(embed);
+          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, "Kick", 0, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "Kick", 0, "Spamming [Auto]", now]);
           message.member.kick();
         } else { //mute incrementing by 120 minutes and starting at 120
           message.author.send(`You were muted (${muteCase * 120} minutes) for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was Muted for ${muteCase * 120} minutes.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.get(modlogchannelid).send(embed);
+          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
 
           //put that modlog in
-          db.run(`INSERT INTO modlogs (moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?)`, ["797234744277336094", message.author.id, `Mute`, `${muteCase * 120} minutes`, "Spamming [Auto]", now]);
+          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, `Mute`, `${muteCase * 120} minutes`, "Spamming [Auto]", now]);
 
           const mutedRole = message.guild.roles.cache.find(r => r.name === 'Muted');
           message.member.roles.add(mutedRole);

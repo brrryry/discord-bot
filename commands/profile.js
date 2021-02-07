@@ -63,7 +63,7 @@ async function getSQL(message, lol) {
   let promise = new Promise(function(resolve) {
 
 
-     db.all(`SELECT * FROM xp ORDER BY xpcount DESC;`, (err, rows) => {
+     db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC;`, (err, rows) => {
      console.log("ROWS: " + rows.length);
      var count = 1;
        var found = false;

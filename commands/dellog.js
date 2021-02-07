@@ -11,7 +11,6 @@ exports.run = (client, message, args, level) => {
 
     const caseID = parseInt(args[0]);
    	if (isNaN(caseID)) return message.reply('that\'s not a number! Try again.');
-
     db.run(`DELETE FROM modlogs WHERE key="${caseID}"`);
 
     const embed1 = new Discord.MessageEmbed().setTitle(`Moderation Log Sucessfully Deleted.`);
