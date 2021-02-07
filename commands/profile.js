@@ -55,7 +55,6 @@ exports.run = async (client, message, args, level) => {
 async function getRankString(message, lol) {
 
   let result = await getSQL(message, lol);
-  console.log(result);
   return result;
 }
 
@@ -64,11 +63,10 @@ async function getSQL(message, lol) {
 
 
      db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC;`, (err, rows) => {
-     console.log("ROWS: " + rows.length);
      var count = 1;
        var found = false;
        rows.forEach(row => {
-       console.log(count);
+
          if(lol === row.id) {
            found = true;
            console.log(count + " (Level " + row.level + ", " + row.xpcount + " XP)");

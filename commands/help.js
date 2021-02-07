@@ -8,7 +8,7 @@ const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith("
 exports.run = (client, message, args, level) => {
 
     if(args[0]) { //help on a specific category
-      var outputValue = `\`\`\`ARM\n===<${args[0].toUpperCase()}>==\n`;
+      var outputValue = `\`\`\`ARM\n===<${args[0].toUpperCase()}>===\n`;
       for(const file of commandFiles) {
         const command = require(`./${file}`);
         if(args[0].toLowerCase() === command.config.category && command.config.permissionLevel <= level) {
