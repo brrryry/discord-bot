@@ -36,10 +36,15 @@ exports.run = (client, message, args, level) => {
 
     var embed = new Discord.MessageEmbed().setTitle("Help Hub!");
     var descValue = "";
+    descValue += `The prefix of this bot is currently \`\`${prefix}\`\`.\n\nCurrent Categories: `;
+
     for(const category of categories) {
-      descValue += `${prefix}help ${category}\n\n`;
+      descValue += `\`\`${category}\`\` `;
     }
-    embed.setDescription("Use these commands to help you!\n\n" + descValue);
+
+    descValue += `\nDo \`\`${prefix}help <category>\`\` to get help on a specific section of the bot commands!`;
+    embed.setDescription(descValue);
+    embed.setColor("#D43FEB");
 
     return message.channel.send(embed);
 

@@ -179,11 +179,14 @@ client.on("message", async message => {
         var randomXP = Math.floor(Math.random() * 15) + 10;
         let xpPromise = new Promise(resolve => {
           db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
-            db.run(`UPDATE xp SET xpcount = "${row.xpcount}" + "${randomXP}" WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`);
-            if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up
-              db.run(`UPDATE xp SET level = "${row.level}" + 1 WHERE id = "${message.member.id} AND guild = "${message.guild.id}"`);
-              if(message.member.guild.id === "796168991458066453") updateLevelRoles(message.member, row.level + 1);
-              message.reply(`you just reached level ${row.level + 1}! Congratulations!`);
+            if(row.length == 0) message.reply(`Your XP database isn't initalized! Do ${prefix}dbinit to fix this.`);
+            else {
+              db.run(`UPDATE xp SET xpcount = ${row.xpcount} + ${randomXP} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
+              if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up
+                db.run(`UPDATE xp SET level = ${row.level} + 1 WHERE id = ${message.member.id} AND guild = ${message.guild.id}`);
+                if(message.member.guild.id === "796168991458066453") updateLevelRoles(message.member, row.level + 1);
+                message.reply(`you just reached level ${row.level + 1}! Congratulations!`);
+              }
             }
           });
 

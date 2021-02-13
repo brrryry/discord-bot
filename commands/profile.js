@@ -3,6 +3,8 @@ const Discord = require("discord.js");
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 
+const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+
 exports.run = async (client, message, args, level) => {
     let Embed = new Discord.MessageEmbed();
     let roles = [];
@@ -41,6 +43,8 @@ exports.run = async (client, message, args, level) => {
       var rankadd = await getRankString(message, id);
 
       //console.log(rankadd);
+      if(rankadd == "m") return message.channel.send(`You aren't initialized in this database! Do ${prefix}dbinit to initalize yourself!`);
+
       rankxp += rankadd;
 
 
@@ -63,7 +67,7 @@ async function getSQL(message, lol) {
 
 
      db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC;`, (err, rows) => {
-     var count = 1;
+       var count = 1;
        var found = false;
        rows.forEach(row => {
 
@@ -74,6 +78,8 @@ async function getSQL(message, lol) {
          }
          if(!found) count++;
         });
+
+        if(!found) resolve("m");
      });
   });
 

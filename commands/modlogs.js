@@ -19,7 +19,7 @@ exports.run = async (client, message, args, level) => {
     }
 
     db.all(`SELECT * FROM modlogs WHERE offender = "${user.id}" AND guild = "${message.guild.id}"`, (err, rows) => {
-      if(!rows) return message.reply("no logs were found!");
+      if(rows.length == 0) return message.reply("no logs were found!");
       var embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
       var value = "";
       var count = 0;
