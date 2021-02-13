@@ -179,7 +179,7 @@ client.on("message", async message => {
         var randomXP = Math.floor(Math.random() * 15) + 10;
         let xpPromise = new Promise(resolve => {
           db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
-            if(row.length == 0) message.reply(`Your XP database isn't initalized! Do ${prefix}dbinit to fix this.`);
+            if(!row) message.reply(`Your XP database isn't initalized! Do ${prefix}dbinit to fix this.`);
             else {
               db.run(`UPDATE xp SET xpcount = ${row.xpcount} + ${randomXP} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
               if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up
