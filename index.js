@@ -139,7 +139,7 @@ client.on("message", async message => {
 
   //system variables
   var antiSpamOn = true;
-  var xpSystemOn = false;
+  var xpSystemOn = true;
 
 
   messageLogs.push({
