@@ -94,7 +94,7 @@ client.on("guildMemberRemove", async member => {
 client.on("messageUpdate", async (oldmessage, newmessage) => {
   if(oldmessage.author.bot) return;
   if(oldmessage.content === newmessage.content || oldmessage.author.bot) return;
-  var messageChannel = message.guild.channels.cache.find(c => c.name == "message-logs");
+  var messageChannel = oldmessage.guild.channels.cache.find(c => c.name == "message-logs");
 
   var embed = new Discord.MessageEmbed().setTitle("Message Edited").setColor("#ffff00").setDescription(`User: <@!${newmessage.member.id}>\nChannel: <#${newmessage.channel.id}>\n\nOld Message:\n${oldmessage.content}\n\nNew Message:\n${newmessage.content}`);
   return messageChannel.send(embed);
@@ -110,8 +110,8 @@ client.on("messageDelete", async message => {
 })
 
 //identifiers and reaction role names
-var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE"];
-var reactionRoleNames = ["797261727723945985", "797259962693976066", "797259281057054760"];
+var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE", "%F0%9F%94%AB"];
+var reactionRoleNames = ["797261727723945985", "797259962693976066", "797259281057054760", "810553902029078528"];
 
 //on message react (used for reaction roles)
 client.on("messageReactionAdd", async (reaction, user) => {
@@ -139,7 +139,7 @@ client.on("message", async message => {
 
   //system variables
   var antiSpamOn = true;
-  var xpSystemOn = true;
+  var xpSystemOn = false;
 
 
   messageLogs.push({
