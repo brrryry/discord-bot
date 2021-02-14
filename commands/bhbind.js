@@ -17,7 +17,7 @@ exports.run = (client, message, args, level) => {
       var idIsTaken = false;
 
       let idTaken = new Promise(resolve => {
-        db.all(`SELECT * FROM bhbinds WHERE discordID = ${user} AND discordGuild = ${message.guild.id}`, (err, rows) => {
+        db.all(`SELECT * FROM bhbinds`, (err, rows) => {
             if(!rows) idIsTaken = false;
             else {
               rows.forEach(row => {
