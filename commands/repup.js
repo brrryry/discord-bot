@@ -20,7 +20,7 @@ exports.run = async (client, message, args, level) => {
       return message.reply("you need to mention someone to give them reputation!");
     }
 
-    if(!args[1]) message.reply("you need to give a reason! Try again.");
+    if(!args[1]) return message.reply("you need to give a reason! Try again.");
     if(message.mentions.members.first().id == message.author.id) return message.channel.send("You can't give reputation to yourself! Try again.");
 
 
