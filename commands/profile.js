@@ -47,11 +47,23 @@ exports.run = async (client, message, args, level) => {
 
       rankxp += rankadd;
 
+      var rep = 0;
+
+      let repPromise = new Promise(resolve => {
+        db.all(`SELECT * FROM rep WHERE id = ${member1.id} AND guild = ${message.guild.id}`, (err, rows) => {
+          rows.forEach(row => {
+            rep += row.rep;
+          });
+        });
+        setTimeout(() => resolve("Y"), 500);
+      });
+
+      let repResult = await repPromise;
 
       Embed.setDescription(
         `Joined: ${Intl.DateTimeFormat("en-US").format(member1.joinedAt)}\nID: ${
           member1.id
-        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}`
+        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}\nReputation: ${rep}`
       );
       return message.channel.send(Embed);
 }
