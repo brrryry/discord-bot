@@ -64,9 +64,9 @@ exports.run = async (client, message, args, level) => {
 }
 
 exports.config = {
-  name: "repup",
-  usage: "repup <user> <reason>",
-  description: "Give someone some reputation! [POSITIVE]",
+  name: "repdown",
+  usage: "repdown <user> <reason>",
+  description: "Give someone some reputation! [NEGATIVE]",
   category: "reputation",
   permissionLevel: 0
 };
