@@ -1,6 +1,6 @@
 //Basic requirements
 const Discord = require('discord.js');
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("./config.json"); //get the prefix, token, status and welcome channel id
+const {prefix, token, currencyname, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("./config.json"); //get the prefix, token, status and welcome channel id
 const fs = require ("fs");
 
 //sql database setup
@@ -61,11 +61,9 @@ client.on("guildMemberAdd", async member => {
     var memberRole = member.guild.roles.cache.get("797260531378552842");
     member.roles.add(memberRole);
   }
-
-
   //calculate levels upon joining with await/async stuff
   let setLevelOnJoinPromise = new Promise((resolve) => {
-    db.all(`SELECT * FROM xp WHERE id = "${member.id}"`, (err, rows) => {
+    db.all(`SELECT * FROM xp WHERE id = "${member.id}" AND guild = ${member.guild.id}`, (err, rows) => {
       if(rows.length == 0) {
         updateLevelRoles(member, 0);
         db.run(`INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
@@ -77,10 +75,24 @@ client.on("guildMemberAdd", async member => {
     });
       setTimeout(() => resolve("!"), 1000);
   })
-
   let setLevelOnJoinResult = await setLevelOnJoinPromise;
 
+  //calculating prestige upon joining with await/async stuff
+  let prestigePromise = new Promise((resolve) => {
 
+    db.all(`SELECT * FROM currency WHERE id = ${member.id} AND guild = ${member.guild.id}`, (err, rows) => {
+      if(rows.length == 0) {
+        db.run(`INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)`, [member.id, member,guild.id, 0, 0]);
+      } else {
+        rows.forEach(row => {
+          if(member.guild.id == "796168991458066453") updatePrestigeRoles(member, row.prestige);
+        });
+      }
+    });
+    setTimout(() => resolve("yeyeyeyeyeye"), 1000);
+  });
+
+  let prestigeResult = await prestigePromise;
 
 });
 
@@ -148,6 +160,13 @@ client.on("message", async message => {
   let date = new Date();
 
   if(!message.author.bot && message.member.roles.cache.some(role => role.name === 'Muted')) return;
+
+  //secret codes!
+  if(message.content.toLowerCase().includes("eggbot")) {
+    message.channel.send(`[Secret Code]: Thanks for watching my twitch :D`).then(msg => {
+      msg.delete({timeout: 3000});
+    });
+  }
 
   //system variables
   var antiSpamOn = true;
@@ -332,11 +351,15 @@ client.on("message", async message => {
   //level analysis
   var permissionLevel = 0;
   if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
-  else if(message.member.roles.cache.find(r => r.id === "796171258508607488")) permissionLevel = 5; //staff member
+  if(message.member.roles.cache.find(r => r.id === "817600232111079495")) permissionLevel = 5;
 
 
   //actually execute commandFiles
   if(message.author.bot) return;
+
+  //Secret Codes LOL!
+
+
   try {
     let commandFile = require(`./commands/${command}.js`);
     if(permissionLevel >= commandFile.config.permissionLevel) commandFile.run(client, message, args, permissionLevel);
@@ -366,6 +389,24 @@ function updateLevelRoles(member, level) {
   for(var i = 0; i < levelRoles.length; i++) {
     if(level >= levelNumRequirements[i]) {
       member.roles.add(levelRoles[i]);
+      return;
+    }
+  }
+
+}
+
+function updatePrestigeRoles(member, prestige) {
+  var prestigeRoleIDs = ["818671806441455628", "818671880843165747", "818671960137269279", "818672014608695328", "818672107000823840"];
+  var prestigeRoles = [];
+
+  for(const id of prestigeRoleIDs) {
+    var rolePush = member.guild.roles.cache.get(id);
+    member.roles.remove(rolePush);
+  }
+
+  for(var i = 1; i <= prestigeRoleIDs.length; i++) {
+    if(prestige == i) {
+      member.roles.add(prestigeRoles[i - 1]);
       return;
     }
   }

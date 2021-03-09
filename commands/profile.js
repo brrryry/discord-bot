@@ -3,7 +3,8 @@ const Discord = require("discord.js");
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+const {prefix, token, currencyname, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+
 
 exports.run = async (client, message, args, level) => {
     let Embed = new Discord.MessageEmbed();
@@ -43,27 +44,32 @@ exports.run = async (client, message, args, level) => {
       var rankadd = await getRankString(message, id);
 
       //console.log(rankadd);
-      if(rankadd == "m") return message.channel.send(`You aren't initialized in this database! Do ${prefix}dbinit to initalize yourself!`);
+      if(rankadd == "m") return message.channel.send(`This person isn't initialized in the database!`);
 
       rankxp += rankadd;
 
-      var rep = 0;
+      var currency = 0;
 
-      let repPromise = new Promise(resolve => {
-        db.all(`SELECT * FROM rep WHERE id = ${member1.id} AND guild = ${message.guild.id}`, (err, rows) => {
-          rows.forEach(row => {
-            rep += row.rep;
-          });
+      let getCurrencyPromise = new Promise(resolve => {
+        db.all(`SELECT * FROM currency WHERE id = ${id} AND guild = ${message.guild.id}`, (err, rows) => {
+          if(rows.length == 0) currency = 0;
+          else {
+            rows.forEach(row => {
+              currency = row.currency;
+            });
+          }
         });
-        setTimeout(() => resolve("Y"), 500);
+
+        setTimeout(() => resolve("YEYEYE"), 1000);
       });
 
-      let repResult = await repPromise;
+      let getCurrencyResult = await getCurrencyPromise;
+
 
       Embed.setDescription(
         `Joined: ${Intl.DateTimeFormat("en-US").format(member1.joinedAt)}\nID: ${
           member1.id
-        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}\nReputation: ${rep}`
+        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}\n${currencyname}: ${currency}`
       );
       return message.channel.send(Embed);
 }
