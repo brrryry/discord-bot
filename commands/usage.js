@@ -12,7 +12,7 @@ exports.run = (client, message, args, level) => {
     for(const file of commandFiles) {
       const command = require(`./${file}`);
 
-      if(command.config.name === args[0].toLowerCase()) return message.channel.send(`${prefix}${command.config.name}: ${command.config.description}\n${prefix}${command.config.usage}`);
+      if(command.config.name === args[0].toLowerCase() && command.config.level <= level) return message.channel.send(`${prefix}${command.config.name}: ${command.config.description}\n${prefix}${command.config.usage}`);
     }
 
     return message.reply("this command doesn't exist!");
