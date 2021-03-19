@@ -33,9 +33,9 @@ exports.run = (client, message, args, level) => {
 }
 
 exports.config = {
-  name: "membercount",
-  usage: "membercount",
-  description: "Get the number of members in the server!",
+  name: "members",
+  usage: "members <role ping>",
+  description: "Get the number of members with a certain role in the server!",
   category: "utility",
   permissionLevel: 5
 };

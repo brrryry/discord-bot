@@ -122,7 +122,7 @@ client.on("messageDelete", async message => {
 })
 
 //identifiers and reaction role names
-var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE", "%F0%9F%94%AB", "%F0%9F%A7%A9"];
+var identifiers = ["%E2%8F%AF%EF%B8%8F", "%F0%9F%93%9D", "%F0%9F%8E%AE", "%F0%9F%94%AB", "%F0%9F%93%A2"];
 var reactionRoleNames = ["797261727723945985", "797259962693976066", "797259281057054760", "810553902029078528", "815034411082579998"];
 
 //on message react (used for reaction roles)
