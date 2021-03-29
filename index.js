@@ -131,9 +131,7 @@ client.on("messageReactionAdd", async (reaction, user) => {
   for(var i = 0; i < identifiers.length; i++) {
     let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
     if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") {
-      let barRole = reaction.message.guild.roles.cache.find(r => r.id === "817437143785013258");
       reaction.message.guild.members.cache.get(user.id).roles.add(reactionRole);
-      reaction.message.guild.members.cache.get(user.id).roles.add(barRole);
     }
   }
 })
@@ -143,13 +141,7 @@ client.on("messageReactionRemove", async (reaction, user) => {
   for(var i = 0; i < identifiers.length; i++) {
     let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
     if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") {
-      var hasAnyRoles = false;
-      let barRole = reaction.message.guild.roles.cache.find(r => r.id === "817437143785013258");
-      for(var j = 0; j < reactionRoleNames.length; j++) {
-        if(reaction.message.guild.members.cache.get(user.id).roles.cache.has(r => r.id === reactionRoleNames[j])) hasAnyRoles = true;
-      }
       reaction.message.guild.members.cache.get(user.id).roles.remove(reactionRole);
-      if(!hasAnyRoles) reaction.message.guild.members.cache.get(user.id).roles.remove(barRole);
     }
   }
 })
