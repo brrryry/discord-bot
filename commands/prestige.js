@@ -27,7 +27,7 @@ exports.run = async (client, message, args, level) => {
 
   let getPrestigeResult = await getPrestigePromise;
 
-  var prestigecost = Math.pow(1.5, prestigelevel + 1) * 100000;
+  var prestigecost = Math.pow(1.5, prestigelevel + 1) * 50000;
 
   if(currency < prestigecost) return message.channel.send(`You can't afford to prestige! (The cost is ${prestigecost} ${currencyname})`);
 
