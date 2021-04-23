@@ -46,7 +46,7 @@ for(const file of commandFiles) {
     }
 
   }
-  console.log(`Loaded ${command.config.name}.`);
+  console.log(`Loaded ${command.config.name}. (Level ${command.config.permissionLevel})`);
 }
 
 //client startup
@@ -350,7 +350,7 @@ client.on("message", async message => {
   //level analysis
   var permissionLevel = 0;
   if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
-  if(message.member.roles.cache.find(r => r.id === "817600232111079495")) permissionLevel = 5;
+  if(message.member.roles.cache.find(r => r.id === "834812051665846284")) permissionLevel = 8;
 
 
   //actually execute commandFiles
