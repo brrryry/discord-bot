@@ -12,5 +12,6 @@ exports.config = {
   usage: "mylevel",
   description: "Get your bot permission level!",
   category: "misc",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['mlllll']
 };

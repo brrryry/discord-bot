@@ -49,5 +49,6 @@ exports.config = {
   usage: "ban <user> <reason>",
   description: "Ban a user!",
   category: "moderation",
-  permissionLevel: 5
+  permissionLevel: 5,
+  aliases: ['poof', 'byebye', 'thanossnap']
 };

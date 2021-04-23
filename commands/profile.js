@@ -111,5 +111,6 @@ exports.config = {
   usage: "profile <user (optional)>",
   description: "Gets a server profile!",
   category: "misc",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['avatar', 'p']
 };

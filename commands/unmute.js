@@ -55,5 +55,6 @@ exports.config = {
   usage: "unmute <user> <reason>",
   description: "Unmute a User!",
   category: "moderation",
-  permissionLevel: 5
+  permissionLevel: 5,
+  aliases: ['openmouf']
 };

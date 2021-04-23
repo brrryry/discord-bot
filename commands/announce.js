@@ -33,5 +33,6 @@ exports.config = {
   description: "THE BOT SHALL SPEAK!",
   category: "misc",
   permissionLevel: 10,
-  guildLevel: 1
+  guildLevel: 1,
+  aliases: ['thelordshallspeak']
 };

@@ -49,4 +49,5 @@ exports.config = {
   description: "Warn a user!",
   category: "moderation",
   permissionLevel: 5,
+  aliases: ['boop', 'smack', 'bonk'],
 };

@@ -26,5 +26,6 @@ exports.config = {
   usage: "leaderboard",
   description: "The most active people in the server.",
   category: "misc",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['lb']
 };

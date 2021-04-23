@@ -38,7 +38,14 @@ const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith("
 
 for(const file of commandFiles) {
   const command = require(`./commands/${file}`);
-  client.commands.set(command.name, command);
+  client.commands.set(command.config.name, command);
+  if(command.config.aliases) {
+    for(i = 0; i < command.config.aliases.length; i++) { //aliases!
+      console.log(`\tALIAS: ${command.config.aliases[i]}`);
+      client.commands.set(command.config.aliases[i], command);
+    }
+
+  }
   console.log(`Loaded ${command.config.name}.`);
 }
 
@@ -333,7 +340,7 @@ client.on("message", async message => {
 
   }
 
-  if(!message.content.startsWith(prefix) || !message.guild || (message.content.startsWith(prefix) && message.content.length <= 3)) return;
+  if(!message.content.startsWith(prefix) || !message.guild) return;
   //NOTE: No command name can be shorter than 3 letters.
 
   const args = message.content.slice(prefix.length).split(" ");
@@ -353,11 +360,12 @@ client.on("message", async message => {
 
 
   try {
-    let commandFile = require(`./commands/${command}.js`);
+    if(!client.commands.has(command)) return message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!");
+    let commandFile = client.commands.get(command); //get the command/alias
     if(permissionLevel >= commandFile.config.permissionLevel) commandFile.run(client, message, args, permissionLevel);
   } catch (error) {
     console.log(error);
-    message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!")
+    message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!");
   }
 });
 

@@ -96,5 +96,6 @@ exports.config = {
   usage: "mute <user> <time amount+ time unit> <reason>",
   description: "Mute a User!",
   category: "moderation",
-  permissionLevel: 5
+  permissionLevel: 5,
+  aliases: ['shutup', 'silence']
 };

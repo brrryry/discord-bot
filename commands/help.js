@@ -55,5 +55,6 @@ exports.config = {
   usage: "help <category (optional)>",
   description: "Get some help!",
   category: "utility",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['helpmepls', 'halp', 'stuck', 'oof']
 };

@@ -12,7 +12,19 @@ exports.run = (client, message, args, level) => {
     for(const file of commandFiles) {
       const command = require(`./${file}`);
 
-      if(command.config.name === args[0].toLowerCase() && command.config.level <= level) return message.channel.send(`${prefix}${command.config.name}: ${command.config.description}\n${prefix}${command.config.usage}`);
+      if(command.config.name === args[0].toLowerCase() && command.config.permissionLevel <= level) {
+        let stringofaliases = "";
+
+        if(command.config.aliases) { //fetch aliases
+          for(i = 0; i < command.config.aliases.length; i++) { //aliases!
+            stringofaliases += `\`${prefix}${command.config.aliases[i]}\` `;
+          }
+        }
+
+
+        return message.channel.send(`${prefix}${command.config.name}: ${command.config.description}\n${prefix}${command.config.usage}\n\nAliases: ${stringofaliases}`);
+
+      }
     }
 
     return message.reply("this command doesn't exist!");
@@ -25,5 +37,6 @@ exports.config = {
   usage: "usage <command name>",
   description: "Learn how to use a command!",
   category: "utility",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['u']
 };

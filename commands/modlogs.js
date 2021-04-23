@@ -54,4 +54,5 @@ exports.config = {
   description: "Gets the moderation logs of a spefic user!",
   category: "moderation",
   permissionLevel: 5,
+  aliases: ['logs']
 };

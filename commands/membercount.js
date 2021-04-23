@@ -23,5 +23,6 @@ exports.config = {
   usage: "membercount",
   description: "Get the number of members in the server!",
   category: "utility",
-  permissionLevel: 0
+  permissionLevel: 0,
+  aliases: ['mc']
 };

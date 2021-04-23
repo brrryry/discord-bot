@@ -49,5 +49,6 @@ exports.config = {
   usage: "kick <user> <reason>",
   description: "Kick a user!",
   category: "moderation",
-  permissionLevel: 5
+  permissionLevel: 5,
+  aliases: ['yeet']
 };
