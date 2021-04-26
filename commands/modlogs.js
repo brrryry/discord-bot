@@ -26,7 +26,10 @@ exports.run = async (client, message, args, level) => {
 
       rows.forEach(row => {
         var rowMuteTime = row.modtype;
-        if(row.muteTime != "0") rowMuteTime = `Mute (${row.muteTime})`;
+        if(row.muteTime != "0") {
+          if(row.modtype == "ImageMute") rowMuteTime = `Image Mute (${row.muteTime})`;
+          else rowMuteTime = `Mute (${row.muteTime})`;
+        }
         else if (row.modtype == "uban") rowMuteTime = `Ban (Unappealable)`;
         else if (row.modtype == "aban") rowMuteTime = `Ban (Appealable)`;
         value = value + `\n\n**CASE: **${row.key}\n**TYPE: **${rowMuteTime}\n**MODERATOR: **<@!${row.moderator}>\n**OFFENDER: **<@!${row.offender}>\n**REASON: **${row.reason}\n**TIME: **${row.time}`;

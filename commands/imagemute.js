@@ -8,6 +8,7 @@ exports.run = (client, message, args, level) => {
 
     var user = message.mentions.users.first();
 
+
     if(user == null || user == undefined) {
       try {
       user = client.users.cache.get(args[0]);
@@ -15,13 +16,14 @@ exports.run = (client, message, args, level) => {
       return message.reply('Couldn\'t get a Discord user with this userID!');
       }
     }
+
     let member = message.guild.members.cache.get(user.id);
     const reason = args.slice(2).join(" ");
 
     if(user == null || user == undefined) return message.reply('Invalid user! Try again.');
 
 
-    if(member.roles.cache.find(r => r.name === "Moderator") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+    if(member.roles.cache.find(r => r.name === "Staff") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
 
     if(!args[1]) return message.reply('you need to specify a time! Try again.');
 
@@ -71,14 +73,14 @@ exports.run = (client, message, args, level) => {
     var muteStatement = `${muteTime} ${unit}`;
     if(duration == "Permanent") muteStatement = "Permanent";
 
-    db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "Mute", muteStatement, reason, now]);
+    db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "ImageMute", muteStatement, reason, now]);
     //message.reply("Warn Suceeded.");
 
 
 
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Muted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Mute (${duration})`).addField("Reason: ", reason);
+    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Image Muted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Image Mute (${duration})`).addField("Reason: ", reason);
 
-    let mutedRole = message.guild.roles.cache.find(role => role.name == "Muted");
+    let mutedRole = message.guild.roles.cache.find(role => role.name == "Image Mute");
     member.roles.add(mutedRole);
 
     message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
@@ -88,14 +90,14 @@ exports.run = (client, message, args, level) => {
 
 
     message.guild.channels.cache.get(modlogchannelid).send(embed);
-    message.mentions.users.first().send("You were muted (" + muteStatement + ") for: " + reason);
+    message.mentions.users.first().send("You were image muted (" + muteStatement + ") for: " + reason);
     message.channel.send("Moderation Log Successful.")
     return;
 }
 
 exports.config = {
-  name: "mute",
-  usage: "mute <user> <time amount+ time unit> <reason>",
+  name: "imagemute",
+  usage: "imagemute <user> <time amount+ time unit> <reason>",
   description: "Mute a User!",
   category: "moderation",
   permissionLevel: 5,

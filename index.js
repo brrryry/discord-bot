@@ -174,7 +174,6 @@ client.on("message", async message => {
 
   messageLogs.push({
       "message": message.content,
-      "guild": message.guild.id,
       "author": message.author.id,
       "time": date.getTime()
   });
