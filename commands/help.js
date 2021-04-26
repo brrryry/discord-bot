@@ -9,14 +9,19 @@ exports.run = (client, message, args, level) => {
 
     if(args[0]) { //help on a specific category
       var outputValue = `\`\`\`ARM\n===<${args[0].toUpperCase()}>===\n`;
+      var cate = false;
       for(const file of commandFiles) {
         const command = require(`./${file}`);
         if(args[0].toLowerCase() === command.config.category && command.config.permissionLevel <= level) {
           outputValue += `'${prefix}${command.config.name}': ${command.config.description}\n`;
+          cate = true;
         }
       }
 
-      if(outputValue == `\`\`\`ARM===<${args[0].toUpperCase()}>===\n`) return message.reply("that isn't a valid category OR none of the commands are ones that you can use! Try again.");
+      outputValue += `\nUse ${prefix}usage <command name> to get more information on a specific command!`;
+
+      //if there is no category
+      if(!cate) return message.reply("that isn't a valid category OR none of the commands are ones that you can use! Try again.");
 
       return message.channel.send(outputValue + "```");
 

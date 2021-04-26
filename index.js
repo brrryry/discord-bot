@@ -184,7 +184,7 @@ client.on("message", async message => {
 
   //xp system
 
-  if(xpSystemOn && !message.author.bot) {
+  if(xpSystemOn && !message.author.bot && message.channel.id != "835002640688480297" && message.channel.id != "797358307781509140") { //not in mod chats
     var notInitYet = true;
     for(var i = 0; i < xpMessage.length; i++) {
       if(message.author.id == xpMessage[i].author && message.guild.id == xpMessage[i].guild) notInitYet = false;

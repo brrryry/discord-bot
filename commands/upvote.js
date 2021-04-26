@@ -41,41 +41,24 @@ exports.run = async (client, message, args, level) => {
 
   sendChannel.send("@everyone\nVOTE: " + voteSubject + "\nVote made by <@!" + message.member.id + ">\nYou will have " + baseTime + " " + unit + " to vote. \n(Remember that your vote is FINAL, so think before you react)").then(msg => {
     var thUP = client.emojis.cache.get("768872753125523476");
-    var thDOWN = client.emojis.cache.get("768872857345589248");
 
-    msg.react(thUP).then(() => msg.react(thDOWN)); //async reactions sux
+    msg.react(thUP); //async reactions sux
 
     const reactionFilter = (reaction, user) => {
-      return reaction.emoji.id === thUP.id || reaction.emoji.id === thDOWN.id;
+      return reaction.emoji.id === thUP.id;
     };
 
     const rCollector = msg.createReactionCollector(reactionFilter, {time: voteTime});
 
-    var reactedUsers = [];
+    //var reactedUsers = [];
 
     rCollector.on('collect', (reaction, user) => {
-
-      var alreadyReacted = false;
-
-      for(var i = 0; i < reactedUsers.length; i++) {
-        if(reactedUsers[i] === user.id) alreadyReacted = true;
-      }
-
-      if(alreadyReacted) reaction.users.remove(user);
-
-      if(!user.bot && !alreadyReacted) {
-        reactedUsers.push(user.id);
-      }
+      console.log("reacted!");
     });
 
     rCollector.on('end', collected => {
       var yes = collected.get(thUP.id).count - 1;
-      var no = collected.get(thDOWN.id).count - 1;
-
-      var choice = "Yes";
-      if(no > yes) choice = "No";
-
-      sendChannel.send("<@!302923939154493441> FINAL VOTE: ||" + yes + "-" + no + " (" + choice + ")||");
+      sendChannel.send("<@!302923939154493441> FINAL UPVOTES: ||" + yes + " Upvote(s)!||");
     });
 
   });
@@ -83,9 +66,9 @@ exports.run = async (client, message, args, level) => {
 }
 
 exports.config = {
-  name: "vote",
-  usage: "vote <time> <channel> <message>",
-  description: "Start a like/dislike vote!",
+  name: "upvote",
+  usage: "upvote <time> <channel> <message>",
+  description: "Start an upvote/single like vote!",
   category: "utility",
   permissionLevel: 8,
 };
