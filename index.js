@@ -76,6 +76,7 @@ client.on("guildMemberAdd", async member => {
         db.run(`INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
       } else {
         rows.forEach(row => {
+          //console.log("updating!");
           if(member.guild.id == "796168991458066453") updateLevelRoles(member, row.level);
         });
       }
@@ -89,14 +90,14 @@ client.on("guildMemberAdd", async member => {
 
     db.all(`SELECT * FROM currency WHERE id = ${member.id} AND guild = ${member.guild.id}`, (err, rows) => {
       if(rows.length == 0) {
-        db.run(`INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)`, [member.id, member,guild.id, 0, 0]);
+        db.run(`INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
       } else {
         rows.forEach(row => {
           if(member.guild.id == "796168991458066453") updatePrestigeRoles(member, row.prestige);
         });
       }
     });
-    setTimout(() => resolve("yeyeyeyeyeye"), 1000);
+    setTimeout(() => resolve("yeyeyeyeyeye"), 1000);
   });
 
   let prestigeResult = await prestigePromise;
