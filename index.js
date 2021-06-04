@@ -349,7 +349,7 @@ client.on("message", async message => {
 
   //level analysis
   var permissionLevel = 0;
-  if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
+  if(message.author.id === "302923939154493441"  || message.author.id === "838473952262750229") permissionLevel = 10; //my ID
   if(message.member.roles.cache.find(r => r.id === "834812051665846284")) permissionLevel = 8;
 
 

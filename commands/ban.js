@@ -19,7 +19,8 @@ exports.run = async (client, message, args, level) => {
   const reason = args.slice(1).join(" ");
   if(user == null || user == undefined) return message.reply("this user cannot be found!");
 
-  if(message.mentions.members.first().roles.cache.find(r => r.name === "Staff") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+  if(member.roles.cache.find(r => r.name === "Moderator") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+
 
   var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",

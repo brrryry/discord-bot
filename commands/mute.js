@@ -81,7 +81,6 @@ exports.run = (client, message, args, level) => {
     let mutedRole = message.guild.roles.cache.find(role => role.name == "Muted");
     member.roles.add(mutedRole);
 
-    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
     if(muteTime * timeMultiply * 1000 <= 2073600000) {
       setTimeout(() => {message.mentions.members.first().roles.remove(mutedRole);}, muteTime * timeMultiply * 1000);
     }
