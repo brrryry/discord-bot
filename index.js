@@ -130,8 +130,8 @@ client.on("messageDelete", async message => {
 })
 
 //identifiers and reaction role names
-var identifiers = ["%F0%9F%8E%AE", "%F0%9F%8E%B5", "%F0%9F%92%BB", "%F0%9F%93%9D", "%F0%9F%93%A2"]; //gaming, music, programming, voter, random
-var reactionRoleNames = ["810553902029078528", "824759842811019354", "797259281057054760", "797259962693976066", "815034411082579998"];
+var identifiers = ["%F0%9F%8E%B5", "%F0%9F%92%BB", "%F0%9F%93%9D", "%F0%9F%93%A2", "1%EF%B8%8F%E2%83%A3", "2%EF%B8%8F%E2%83%A3", "3%EF%B8%8F%E2%83%A3", "4%EF%B8%8F%E2%83%A3"]; //music, programming, voter, random, Brawlhalla, Overwatch, MC, MapleStory
+var reactionRoleNames = ["824759842811019354", "797259281057054760", "797259962693976066", "815034411082579998", "854779761783603220", "854779884668715008", "854779964107653202", "854780012297453618"];
 
 //on message react (used for reaction roles)
 client.on("messageReactionAdd", async (reaction, user) => {

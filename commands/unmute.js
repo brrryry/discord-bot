@@ -20,7 +20,6 @@ exports.run = (client, message, args, level) => {
 
     if(user == null || user == undefined) return message.reply('Invalid user! Try again.');
 
-    if(user.roles.cache.find(r => r.name === "Staff") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
 
     var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
@@ -41,13 +40,13 @@ exports.run = (client, message, args, level) => {
 
     db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "Unmute", "0", reason, now]);
 
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Unmuted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Mute (${duration})`).addField("Reason: ", reason);
+    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Unmuted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
 
 
   message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
-    message.mentions.users.first().send("You were muted (" + muteStatement + ") for: " + reason);
+    message.mentions.users.first().send("You were unmuted for: " + reason);
     message.channel.send("Moderation Log Successful.")
-    return;
+  //  return;
 }
 
 exports.config = {
