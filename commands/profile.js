@@ -112,5 +112,5 @@ exports.config = {
   description: "Gets a server profile!",
   category: "misc",
   permissionLevel: 0,
-  aliases: ['avatar', 'p']
+  aliases: ['avatar']
 };

@@ -43,9 +43,9 @@ exports.run = (client, message, args, level) => {
         });
 
         let setPromise = await new Promise(resolve => {
-            db.all(`SELECT * FROM bhbinds WHERE discordID = "${user}" AND discordGuild = "${message.guild.id}"`, (err, rows) => {
+            db.all(`SELECT * FROM bhbinds WHERE discordID = "${user}"`, (err, rows) => {
               if(rows.length == 0) db.run("INSERT INTO bhbinds (discordID, discordGuild, bhID) VALUES (?, ?, ?)", [message.member.id, message.guild.id, collected.first().content]);
-              else db.run(`UPDATE bhbinds SET bhID = "${collected.first().content}" WHERE discordID = "${user}" AND discordGuild = "${message.guild.id}"`);
+              else db.run(`UPDATE bhbinds SET bhID = "${collected.first().content}" WHERE discordID = "${user}"`);
             });
 
             setTimeout(() => resolve("Y"), 500);

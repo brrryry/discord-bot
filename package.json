@@ -1,28 +1,28 @@
 {
   "name": "discord-bot",
   "version": "1.0.0",
-  "description": "A more professional version for a previous discord bot!",
+  "description": "A more professional discord bot for a specific discord server!",
   "main": "index.js",
-  "dependencies": {
-    "better-sqlite3": "^7.1.2",
-    "discord.js": "^12.5.1",
-    "fs": "0.0.1-security",
-    "node-fetch": "^2.6.1",
-    "node-pre-gyp": "^0.17.0",
-    "request": "^2.88.2",
-    "sqlite": "^4.0.19",
-    "sqlite3": "^5.0.1"
-  },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "ffmpeg-static": "^4.4.0",
+    "fs": "0.0.1-security",
+    "pm2": "^4.5.5",
+    "sqlite3": "^5.0.2",
+    "ytdl-core": "^4.9.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.2.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YouLikeCats/discord-bot.git"
   },
-  "author": "YouLikeCats",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/YouLikeCats/discord-bot/issues"
   },

@@ -17,7 +17,9 @@ exports.run = async (client, message, args, level) => {
    else if (message.guild.members.cache.find(m => m.id === args[0])) {
      user = args[0];
      if(args[1]) legendName = args.slice(1).join(" ").toLowerCase();
-   } else if (args[0]) legendName = args.slice(0).join(" ").toLowerCase();
+   } else if (args[0]) {
+     legendName = args.slice(0).join(" ").toLowerCase();
+   }
 
    var bhIDOutput = "";
 
@@ -25,7 +27,7 @@ exports.run = async (client, message, args, level) => {
    var empty = false;
 
    let getID = new Promise(resolve => {
-     db.all(`SELECT * FROM bhbinds WHERE discordID = "${user}" AND discordGuild = "${message.guild.id}"`, (err, rows)  => {
+     db.all(`SELECT * FROM bhbinds WHERE discordID = "${user}"`, (err, rows)  => {
 
        rows.forEach(row => {
          bhIDOutput = row.bhID;
@@ -48,13 +50,16 @@ exports.run = async (client, message, args, level) => {
      var stringField = JSON.stringify(data);
      const obj = JSON.parse(stringField);
 
+
      var stringField1 = JSON.stringify(obj.legends);
      const obj1 = JSON.parse(stringField1);
 
      var mostUsedLegend = "None";
      var highestLevel = 0;
+     var totalHours = 0;
 
      for(var i = 0; i < obj1.length; i++) {
+       totalHours += obj1[i].matchtime;
        if(obj1[i].xp > highestLevel) {
          highestLevel = obj1[i].xp;
          const legendWords = obj1[i].legend_name_key.split(" ");
@@ -74,6 +79,7 @@ exports.run = async (client, message, args, level) => {
        desc += "**ID:** " + obj.brawlhalla_id + splitline;
        desc += "**Name:** " + obj.name + splitline;
        desc += "**Level:** " + obj.level + splitline;
+       desc += "**Playtime:** " + Math.floor(totalHours / 3600) +  " hours" + splitline;
        desc += "**XP Percentage To Next Level:** " + Math.floor(obj.xp_percentage * 100) + "%" + splitline;
        desc += "**Win Rate:** " + Math.floor(obj.wins / obj.games * 100) + "%" + splitline;
        desc += "**Most Used Legend:** " + mostUsedLegend + splitline;
@@ -155,6 +161,7 @@ exports.run = async (client, message, args, level) => {
            legendFound = true;
            desc += "**Legend Name: **" + selectedLegendName + splitline;
            desc += "**Level: **" + obj1[i].level + splitline;
+           desc += "**Playtime: **" + Math.floor(obj1[i].matchtime / 3600) + " hours" + splitline;
            desc += "**XP Percentage to Next Level: **" + Math.floor(obj1[i].xp_percentage * 100) + "%" + splitline;
            desc += "**Total Damage Dealt: **" + obj1[i].damagedealt + splitline;
            desc += "**Total Damage Taken: **" + obj1[i].damagetaken + splitline;
@@ -183,8 +190,8 @@ exports.run = async (client, message, args, level) => {
 
 exports.config = {
   name: "bhstats",
-  usage: "bhstats <user/id (optional)> <legend name (optional)>",
-  description: "Get some brawlhalla stats!",
+  usage: "bhstats <user/id (optional)> <legend name (optional)/ranked>",
+  description: "Get some brawlhalla stats!\nNOTE: You cannot get the ranked data of a CERTAIN LEGEND. Do not use these parameters AT THE SAME TIME.",
   category: "brawlhalla",
   permissionLevel: 0
 };

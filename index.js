@@ -10,6 +10,8 @@ var db = new sql.Database("db.sqlite");
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 
+global.squeue = new Map();
+
 //message logs and xp setup
 let messageLogs = [];
 let warnLogs = [];
@@ -184,7 +186,7 @@ client.on("message", async message => {
 
   //xp system
 
-  if(xpSystemOn && !message.author.bot && message.channel.id != "835002640688480297" && message.channel.id != "797358307781509140") { //not in mod chats
+  if(xpSystemOn && !message.author.bot && message.channel.id != "835002640688480297" && message.channel.id != "797358307781509140") { //not in bot room
     var notInitYet = true;
     for(var i = 0; i < xpMessage.length; i++) {
       if(message.author.id == xpMessage[i].author && message.guild.id == xpMessage[i].guild) notInitYet = false;
@@ -222,8 +224,25 @@ client.on("message", async message => {
 
           setTimeout(() => resolve("!"), 1000);
         });
-
         let xpResult = await xpPromise;
+
+        if(Math.floor(Math.random() * 10) == 0) { //chance of getting Cat Coins WITH an XP gain
+          console.log("got currency");
+          var randomCoin = Math.floor(Math.random() * 5) + 5;
+          let coinPromise = new Promise(resolve => {
+            db.get(`SELECT * FROM currency WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
+              if(!row) db.run("INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)", [message.member.id, message.guild.id, randomCoin, 0]);
+              else {
+                db.run(`UPDATE currency SET currency = ${row.currency} + ${randomCoin} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
+              }
+            });
+
+            setTimeout(() => resolve("a"), 1000);
+          });
+
+          message.reply(`you just gained ${randomCoin} Cat Coins! Congratulations!`);
+          let coinResult = await coinPromise;
+        }
         alreadyLooped = true;
       }
     }
