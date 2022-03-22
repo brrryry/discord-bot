@@ -7,21 +7,16 @@ const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechanneli
 exports.run = async (client, message, args, level) => {
   const serverQueue = squeue.get(message.guild.id);
 
-  if (!message.member.voice.channel) return message.channel.send("You have to be in a voice channel to stop the music!");
+  if (!serverQueue) return message.channel.send("There are no songs that are currently being played!");
 
-  if (!serverQueue) return message.channel.send("There is no song that I could stop!");
-
-  serverQueue.songs = [];
-  serverQueue.connection.dispatcher.end();
-
-  return message.channel.send("Left the channel.");
+  return message.channel.send(`Current Song: ${serverQueue.songs[0].title}\nURL: ${serverQueue.songs[0].url}`);
 }
 
 exports.config = {
-  name: "leave",
-  usage: "leave",
-  description: "Clears the song queue and leaves the call.",
+  name: "nowplaying",
+  usage: "nowplaying",
+  description: "Gives you the current song name!",
   category: "music",
   permissionLevel: 0,
-  aliases: ['l']
+  aliases: ['np']
 };

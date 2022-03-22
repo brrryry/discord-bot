@@ -10,13 +10,15 @@ exports.run = async (client, message, args, level) => {
     if (!message.member.voice.channel) return message.channel.send("You have to be in a voice channel to stop the music!");
     if (!serverQueue) return message.channel.send("There is no song that I could skip!");
     serverQueue.connection.dispatcher.end();
+
+    if(serverQueue.songs.length == 1) return message.channel.send("That was the end of the queue. The bot will now leave the voice chat.");
 }
 
 exports.config = {
   name: "skip",
   usage: "skip",
   description: "Skip the current song!",
-  category: "misc",
+  category: "music",
   permissionLevel: 0,
   aliases: []
 };

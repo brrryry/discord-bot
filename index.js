@@ -1,6 +1,10 @@
 //Basic requirements
 const Discord = require('discord.js');
-const {prefix, token, currencyname, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("./config.json"); //get the prefix, token, status and welcome channel id
+const curl = require('curl');
+const request = require('request');
+const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret} = require("./config.json"); //get the prefix, token, status and welcome channel id
+const fetch = require("node-fetch").default;
+var exec = require('child_process').exec;
 const fs = require ("fs");
 
 //sql database setup
@@ -51,6 +55,85 @@ for(const file of commandFiles) {
   console.log(`Loaded ${command.config.name}. (Level ${command.config.permissionLevel})`);
 }
 
+//twitch live loop
+//id: 629732208
+const botroom = "797358307781509140"
+let twitchlive = false;
+var twitchtoken = "1";
+const twitchtokenurl = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${twitchclientid}&redirect_uri=https://bryanchan.org&scope=viewing_activity_read`;
+
+const twitchRefreshToken = async function Run() {
+  let twitchAuthPromise = new Promise((reject, resolve) => {
+      exec('twitch token', (error, err, out) => {
+          resolve("!");
+      });
+  }).catch(error => {
+    //do nothing lmao
+  });
+  let twitchAuthResult = await twitchAuthPromise;
+  twitchtoken = twitchAuthResult.out.substring(38).replace("\n", "");
+}
+
+let twitchSearchResult = "";
+
+const twitchLive = async function Run() {
+
+  let twitchSearchResultError = "";
+
+  let twitchSearchPromise = new Promise((reject, resolve) => {
+    exec(`twitch api get /streams -q user_login=youlikec3ts`, (error, out, err) => {
+      if(error) reject(error);
+      else resolve({err, out});
+    })
+  }).catch(error => {
+    twitchSearchResultError = error;
+  });
+
+  twitchSearchResult = await twitchSearchPromise;
+  //console.log(twitchSearchResult);
+  //console.log(twitchSearchResultError);
+
+  //in the case that the error gives the result (which apparently happens sometimes?????)
+  if(twitchSearchResult == undefined && twitchSearchResultError != undefined) twitchSearchResult = twitchSearchResultError;
+  try {
+    twitchSearchResult = JSON.parse(twitchSearchResult.out);
+  } catch (error) {
+    twitchlive = false;
+    return;
+  }
+
+  if(twitchSearchResult.data != undefined && twitchSearchResult.data.length > 0 && twitchlive === false) {
+    //if data result is defined
+
+    var twitchuser = twitchSearchResult.data[0].user_name;
+    var twitchgame = twitchSearchResult.data[0].game_name;
+    var twitchtitle = twitchSearchResult.data[0].title;
+    var twitchstarttime = twitchSearchResult.data[0].started_at;
+    let twitchthumbnail = twitchSearchResult.data[0].thumbnail_url;
+
+    twitchthumbnail = twitchthumbnail.replace("-{width}x{height}", "-1920x1080");
+
+    const twitchEmbed = new Discord.MessageEmbed().setColor("A020F0");
+    twitchEmbed.setTitle("Cats Is Live!");
+    twitchEmbed.addField("Link:", "https://twitch.tv/youlikec3ts");
+    twitchEmbed.addField("Title:", `${twitchtitle}`);
+    twitchEmbed.addField("Game:", `${twitchgame}`);
+    twitchEmbed.setImage(`${twitchthumbnail}`);
+    twitchEmbed.setThumbnail(`${twitchthumbnail}`);
+
+    const twitchGuild = client.guilds.cache.get("796168991458066453");
+    const twitchChannel = twitchGuild.channels.cache.get("796169933180239894");
+    twitchChannel.send(`@everyone, Cats is streaming!\n`, {embed: twitchEmbed});
+    twitchlive = true;
+  } else if ((twitchSearchResult.data == undefined || twitchSearchResult.data.length == 0) && twitchlive === true) {
+    twitchlive = false;
+  }
+
+  //console.log(twitchlive);
+}
+setInterval(twitchLive, 30000);
+setInterval(twitchRefreshToken, 1000 * 360);
+
 //client startup
 client.on('ready', (reaction, user) => {
   client.user.setActivity(` ${status}`, {type: 'PLAYING'}); //set status of bot when it's online
@@ -87,7 +170,139 @@ client.on("guildMemberAdd", async member => {
   })
   let setLevelOnJoinResult = await setLevelOnJoinPromise;
 
-  //calculating prestige upon joining with await/async stuff
+  //calculating prestige upon joining with await/async stuffconst Discord = require('discord.js');
+  const sql = require('sqlite3').verbose();
+  const ytdl = require('ytdl-core');
+  const ytpl = require('ytpl');
+  const ytsr = require('ytsr');
+  var db = new sql.Database("db.sqlite");
+  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+
+  exports.run = async (client, message, args, level) => {
+
+      const voiceChannel = message.member.voice.channel;
+      if(!voiceChannel) return message.channel.send("You aren't in a voice channel! You need to be in a voice channel to play music!");
+
+      const permissions = voiceChannel.permissionsFor(message.client.user);
+      if(!permissions.has("CONNECT") || !permissions.has("SPEAK")) return message.channel.send("I do not have permissions to join/speak in this channel!");
+
+      let songSearch = args.slice(0).join(" ");
+
+      if(!songSearch) return message.channel.send("You need to input a search query! Try again.");
+
+      if(songSearch.includes("list=")) { //if it's a playlist
+        return message.reply("playlists aren't supported yet! Sorry!");
+      } else {
+        let video;
+        try { //if video is url
+          video = await ytdl.getBasicInfo(url);
+        } catch (e) { //otherwise
+          try {
+            const results = await ytsr(songSearch, {limit: 5});
+            const videos = results.items;
+            console.log(videos);
+            let index = 0;
+
+            if(!videos.length) return message.channel.send("No videos were found in the search query! Try again.");
+
+            await message.channel.send([
+              "__**Song selection:**__",
+              videos.map(v => `${++index} - **${v.title}**`).join("\n"),
+              `**Select your song by sending the number from 1 to ${videos.length} in chat.**`
+              ].join("\n\n"));
+
+            let response;
+            try {
+              response = await message.channel.awaitMessages(msg => 0 < parseInt(msg.content) && parseInt(msg.content) < videos.length + 1 && msg.author.id == message.author.id, {
+                max: 1,
+                time: 30000,
+                errors: ['time']
+              });
+            } catch(e) {
+              return message.channel.send("Command cancelled (timeout exception).");
+            }
+
+            const videoIndex = parseInt(response.first().content);
+            video = await ytdl.getBasicInfo(videos[videoIndex - 1].url.split("?v=")[1]);
+          } catch (e) {
+            console.log(e)
+            return message.channel.send("An error occured.")
+          }
+        }
+
+        await message.channel.send(`**${video.videoDetails.title}** has been added to the queue!`);
+        return await queueSong(video, message, voiceChannel, squeue);
+      }
+
+  }
+
+  async function queueSong(video, message, voiceChannel, queue) {
+    const serverQueue = queue.get(message.guild.id)
+
+    const song = {
+      id: video.videoDetails.videoId,
+      title: Discord.escapeMarkdown(video.videoDetails.title),
+      url: video.videoDetails.video_url,
+      user: message.member.id
+    }
+
+    if (!serverQueue) {
+      const queueConstruct = {
+        textChannel: message.channel,
+        voiceChannel,
+        connection: null,
+        songs: [song],
+        volume: 50,
+        playing: true
+      }
+
+      try {
+        const connection = await voiceChannel.join();
+        queueConstruct.connection = connection;
+        queue.set(message.guild.id, queueConstruct);
+        playSong(message.guild, queue, queueConstruct.songs[0]);
+      } catch(e) {
+        console.log(e)
+        message.channel.send("An unknown error occoured.")
+        return queue.delete(message.guild.id)
+      }
+    } else serverQueue.songs.push(song);
+
+    return;
+  }
+
+  async function playSong(guild, queue, song) {
+    const serverQueue = queue.get(guild.id);
+
+    if (!song) {
+      serverQueue.voiceChannel.leave();
+      queue.delete(guild.id);
+      return;
+    }
+
+    serverQueue.connection.play(ytdl(song.id), { bitrate: 'auto' })
+      .on("speaking", speaking => {
+        if (!speaking) {
+          serverQueue.songs.shift();
+          playSong(guild, queue, serverQueue.songs[0])
+        }
+      })
+      .on("error", console.error)
+      .setVolumeLogarithmic(serverQueue.volume / 100);
+
+    serverQueue.textChannel.send(`Now playing **${song.title}**`)
+  }
+
+
+  exports.config = {
+    name: "play",
+    usage: "play <youtube search query/link>",
+    description: "Play a song!",
+    category: "music",
+    permissionLevel: 0,
+    aliases: ['p']
+  };
+
   let prestigePromise = new Promise((resolve) => {
 
     db.all(`SELECT * FROM currency WHERE id = ${member.id} AND guild = ${member.guild.id}`, (err, rows) => {
@@ -132,8 +347,8 @@ client.on("messageDelete", async message => {
 })
 
 //identifiers and reaction role names
-var identifiers = ["%F0%9F%8E%B5", "%F0%9F%92%BB", "%F0%9F%93%9D", "%F0%9F%93%A2", "1%EF%B8%8F%E2%83%A3", "2%EF%B8%8F%E2%83%A3", "3%EF%B8%8F%E2%83%A3", "4%EF%B8%8F%E2%83%A3"]; //music, programming, voter, random, Brawlhalla, Overwatch, MC, MapleStory
-var reactionRoleNames = ["824759842811019354", "797259281057054760", "797259962693976066", "815034411082579998", "854779761783603220", "854779884668715008", "854779964107653202", "854780012297453618"];
+var identifiers = []; //music, programming, voter, random, Brawlhalla, Overwatch, MC, MapleStory
+var reactionRoleNames = [];
 
 //on message react (used for reaction roles)
 client.on("messageReactionAdd", async (reaction, user) => {
@@ -159,6 +374,14 @@ client.on("messageReactionRemove", async (reaction, user) => {
 //client on message send
 client.on("message", async message => {
 
+  //system variables
+  var antiSpamOn = true;
+  var xpSystemOn = true;
+  var debugMode = false;
+
+  if(debugMode && message.channel.id != "797358307781509140") return;
+
+
   let date = new Date();
 
   if(!message.author.bot && message.member.roles.cache.some(role => role.name === 'Muted')) return;
@@ -170,9 +393,6 @@ client.on("message", async message => {
     });
   }
 
-  //system variables
-  var antiSpamOn = true;
-  var xpSystemOn = true;
 
 
   messageLogs.push({
@@ -185,7 +405,6 @@ client.on("message", async message => {
 
 
   //xp system
-
   if(xpSystemOn && !message.author.bot && message.channel.id != "835002640688480297" && message.channel.id != "797358307781509140") { //not in bot room
     var notInitYet = true;
     for(var i = 0; i < xpMessage.length; i++) {
@@ -226,7 +445,9 @@ client.on("message", async message => {
         });
         let xpResult = await xpPromise;
 
-        if(Math.floor(Math.random() * 10) == 0) { //chance of getting Cat Coins WITH an XP gain
+        var randomCoinChance = Math.floor(Math.random() * 20);
+
+        if(randomCoinChance == 0) { //chance of getting Cat Coins WITH an XP gain
           console.log("got currency");
           var randomCoin = Math.floor(Math.random() * 5) + 5;
           let coinPromise = new Promise(resolve => {
@@ -253,9 +474,13 @@ client.on("message", async message => {
   if(antiSpamOn && !message.author.bot) { //anti spam system is on
     var msgCount = 0; //message count
     for(var i = 0; i < messageLogs.length; i++) {
-      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000 && messageLogs[i].guild == message.guild.id) msgCount++; //6 msg in 3 seconds
+      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000 /*&& messageLogs[i].guild == message.guild.id*/) {
+        msgCount++; //6 msg in 3 seconds
+      }
       else if (messageLogs[i].author == message.author.id && messageLogs[i].message == message.content && date.getTime() - messageLogs[i].time <= 15000 && messageLogs[i].guild == message.guild.id) msgCount++; //6 repeated msgs in 15 seconds
     }
+
+    console.log(msgCount);
 
     var warnSpam = false;
     var muteSpam = false;
@@ -274,7 +499,7 @@ client.on("message", async message => {
 
     //purge the last 6 messages
     if(warnSpam) {
-      message.channel.bulkDelete(6, true).catch(error => {
+      message.channel.bulkDelete(msgCount, true).catch(error => {
         console.error(err);
       });
 
@@ -368,9 +593,7 @@ client.on("message", async message => {
 
   //level analysis
   var permissionLevel = 0;
-  if(message.author.id === "302923939154493441"  || message.author.id === "838473952262750229") permissionLevel = 10; //my ID
-  if(message.member.roles.cache.find(r => r.id === "834812051665846284")) permissionLevel = 8;
-
+  if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
 
   //actually execute commandFiles
   if(message.author.bot) return;

@@ -14,6 +14,7 @@ exports.run = (client, message, args, level) => {
         const command = require(`./${file}`);
         if(args[0].toLowerCase() === command.config.category && command.config.permissionLevel <= level) {
           outputValue += `'${prefix}${command.config.name}': ${command.config.description}\n`;
+          console.log(file);
           cate = true;
         }
       }
