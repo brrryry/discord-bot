@@ -2,7 +2,7 @@
 const Discord = require('discord.js');
 const curl = require('curl');
 const request = require('request');
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret} = require("./config.json"); //get the prefix, token, status and welcome channel id
+const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret, blacklisted} = require("./config.json"); //get the prefix, token, status and welcome channel id
 const fetch = require("node-fetch").default;
 var exec = require('child_process').exec;
 const fs = require ("fs");
@@ -20,6 +20,7 @@ global.squeue = new Map();
 let messageLogs = [];
 let warnLogs = [];
 let xpMessage = [];
+
 
 messageLogs.push({
     "message": "1",
@@ -131,7 +132,7 @@ const twitchLive = async function Run() {
 
   //console.log(twitchlive);
 }
-setInterval(twitchLive, 30000);
+setInterval(twitchLive, 60000);
 setInterval(twitchRefreshToken, 1000 * 360);
 
 //client startup
@@ -146,7 +147,7 @@ client.on('ready', (reaction, user) => {
 
 //client on member join
 client.on("guildMemberAdd", async member => {
-  var welcomeChannel = member.guild.channels.cache.find(c => c.name == "server-gateway"); //welcome channel
+  var welcomeChannel = member.guild.channels.cache.find(c => c.name == "welcome"); //welcome channel
   if(welcomeChannel != null) welcomeChannel.send(`<@!${member.id}> has just joined the server!`); //only accessible through dev server
 
   if(member.guild.id == "796168991458066453") {
@@ -169,139 +170,6 @@ client.on("guildMemberAdd", async member => {
       setTimeout(() => resolve("!"), 1000);
   })
   let setLevelOnJoinResult = await setLevelOnJoinPromise;
-
-  //calculating prestige upon joining with await/async stuffconst Discord = require('discord.js');
-  const sql = require('sqlite3').verbose();
-  const ytdl = require('ytdl-core');
-  const ytpl = require('ytpl');
-  const ytsr = require('ytsr');
-  var db = new sql.Database("db.sqlite");
-  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
-
-  exports.run = async (client, message, args, level) => {
-
-      const voiceChannel = message.member.voice.channel;
-      if(!voiceChannel) return message.channel.send("You aren't in a voice channel! You need to be in a voice channel to play music!");
-
-      const permissions = voiceChannel.permissionsFor(message.client.user);
-      if(!permissions.has("CONNECT") || !permissions.has("SPEAK")) return message.channel.send("I do not have permissions to join/speak in this channel!");
-
-      let songSearch = args.slice(0).join(" ");
-
-      if(!songSearch) return message.channel.send("You need to input a search query! Try again.");
-
-      if(songSearch.includes("list=")) { //if it's a playlist
-        return message.reply("playlists aren't supported yet! Sorry!");
-      } else {
-        let video;
-        try { //if video is url
-          video = await ytdl.getBasicInfo(url);
-        } catch (e) { //otherwise
-          try {
-            const results = await ytsr(songSearch, {limit: 5});
-            const videos = results.items;
-            console.log(videos);
-            let index = 0;
-
-            if(!videos.length) return message.channel.send("No videos were found in the search query! Try again.");
-
-            await message.channel.send([
-              "__**Song selection:**__",
-              videos.map(v => `${++index} - **${v.title}**`).join("\n"),
-              `**Select your song by sending the number from 1 to ${videos.length} in chat.**`
-              ].join("\n\n"));
-
-            let response;
-            try {
-              response = await message.channel.awaitMessages(msg => 0 < parseInt(msg.content) && parseInt(msg.content) < videos.length + 1 && msg.author.id == message.author.id, {
-                max: 1,
-                time: 30000,
-                errors: ['time']
-              });
-            } catch(e) {
-              return message.channel.send("Command cancelled (timeout exception).");
-            }
-
-            const videoIndex = parseInt(response.first().content);
-            video = await ytdl.getBasicInfo(videos[videoIndex - 1].url.split("?v=")[1]);
-          } catch (e) {
-            console.log(e)
-            return message.channel.send("An error occured.")
-          }
-        }
-
-        await message.channel.send(`**${video.videoDetails.title}** has been added to the queue!`);
-        return await queueSong(video, message, voiceChannel, squeue);
-      }
-
-  }
-
-  async function queueSong(video, message, voiceChannel, queue) {
-    const serverQueue = queue.get(message.guild.id)
-
-    const song = {
-      id: video.videoDetails.videoId,
-      title: Discord.escapeMarkdown(video.videoDetails.title),
-      url: video.videoDetails.video_url,
-      user: message.member.id
-    }
-
-    if (!serverQueue) {
-      const queueConstruct = {
-        textChannel: message.channel,
-        voiceChannel,
-        connection: null,
-        songs: [song],
-        volume: 50,
-        playing: true
-      }
-
-      try {
-        const connection = await voiceChannel.join();
-        queueConstruct.connection = connection;
-        queue.set(message.guild.id, queueConstruct);
-        playSong(message.guild, queue, queueConstruct.songs[0]);
-      } catch(e) {
-        console.log(e)
-        message.channel.send("An unknown error occoured.")
-        return queue.delete(message.guild.id)
-      }
-    } else serverQueue.songs.push(song);
-
-    return;
-  }
-
-  async function playSong(guild, queue, song) {
-    const serverQueue = queue.get(guild.id);
-
-    if (!song) {
-      serverQueue.voiceChannel.leave();
-      queue.delete(guild.id);
-      return;
-    }
-
-    serverQueue.connection.play(ytdl(song.id), { bitrate: 'auto' })
-      .on("speaking", speaking => {
-        if (!speaking) {
-          serverQueue.songs.shift();
-          playSong(guild, queue, serverQueue.songs[0])
-        }
-      })
-      .on("error", console.error)
-      .setVolumeLogarithmic(serverQueue.volume / 100);
-
-    serverQueue.textChannel.send(`Now playing **${song.title}**`)
-  }
-
-
-  exports.config = {
-    name: "play",
-    usage: "play <youtube search query/link>",
-    description: "Play a song!",
-    category: "music",
-    permissionLevel: 0,
-    aliases: ['p']
-  };
 
   let prestigePromise = new Promise((resolve) => {
 
@@ -381,6 +249,14 @@ client.on("message", async message => {
 
   if(debugMode && message.channel.id != "797358307781509140") return;
 
+  //check for blacklisted words
+  for(i = 0; i < blacklisted.length; i++) {
+    if(message.content.toLowerCase().includes(blacklisted[i])) {
+      message.channel.send("Don't use that word!");
+      message.delete();
+    }
+  }
+
 
   let date = new Date();
 
@@ -430,7 +306,7 @@ client.on("message", async message => {
         var randomXP = Math.floor(Math.random() * 15) + 10;
         let xpPromise = new Promise(resolve => {
           db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
-            if(!row) message.reply(`Your XP database isn't initalized! Do ${prefix}dbinit to fix this.`);
+            if(!row) db.run("INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)", [message.member.id, message.guild.id, 0, 0]);
             else {
               db.run(`UPDATE xp SET xpcount = ${row.xpcount} + ${randomXP} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
               if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up

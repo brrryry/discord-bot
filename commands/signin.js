@@ -29,7 +29,7 @@ exports.run = async (client, message, args, level) => {
 
     if(twitchCheckResult == undefined && streamCheckError != undefined) twitchCheckResult = streamCheckError;
 
-    if(twitchCheckResult != undefined && twitchCheckResult.data.length > 0) streaming = true;
+    if(twitchCheckResult.data != undefined && twitchCheckResult.data.length > 0) streaming = true;
     //if they're streaming..then...
     if(streaming) {
       for(i = 0; i < signin_ids.length; i++) {
