@@ -14,13 +14,14 @@ exports.run = async (client, message, args, level) => {
     const filter = msg => msg.author.id === message.author.id;
     message.channel.awaitMessages(filter, {max: 1, time: 120000}).then(async (collected) => {
 
-      var idTaken = false;
       let idTakenPromise = new Promise(resolve => {
         db.all(`SELECT * FROM bhbinds`, (err, rows) => {
           rows.forEach(row => {
-            if(row.twitchID == collected.first().content) idTaken = true;
+            if(row.twitchID == collected.first().content) resolve(true);
           });
         });
+
+        resolve(false);
       });
 
       let idResult = await idTakenPromise;
@@ -50,7 +51,6 @@ exports.run = async (client, message, args, level) => {
       console.log(twitchCheckResult);
       if(twitchCheckResult.data != undefined && twitchCheckResult.data.length > 0) {
         //twitch account found
-
         let twitchWritePromise = new Promise(resolve => {
           db.all(`SELECT * FROM twitchbinds WHERE id=${message.member.id} AND guild=${message.guild.id}`, (err, rows) => {
             if(!rows || rows.length == 0) db.run(`INSERT INTO twitchbinds (id, guild, twitchID) VALUES (?, ?, ?)`, [message.member.id, message.guild.id, twitchCheckResult.data[0].id]);

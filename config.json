@@ -7,5 +7,7 @@
   "modlogchannelid": "797272089035800576",
   "messagechannelid": "797272102603849749",
   "twitchclientid": "q6h1ef829pdhpk7s9846ur9bfgqtem",
-  "twitchsecret:": "a5n782su8yur6p9qpfu99zxfqm9be9"
+  "twitchsecret:": "a5n782su8yur6p9qpfu99zxfqm9be9",
+  "k_score": 32,
+  "score_constant": 10
 }

@@ -2,15 +2,16 @@
 const Discord = require('discord.js');
 const curl = require('curl');
 const request = require('request');
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret, blacklisted} = require("./config.json"); //get the prefix, token, status and welcome channel id
 const fetch = require("node-fetch").default;
 var exec = require('child_process').exec;
 const fs = require ("fs");
+const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret, k_score, score_constant} = require("./config.json"); //get config variables
 
-//sql database setup
+//SQL database setup
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 
+//
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 
@@ -21,6 +22,7 @@ let messageLogs = [];
 let warnLogs = [];
 let xpMessage = [];
 
+const blacklisted = [];
 
 messageLogs.push({
     "message": "1",
@@ -140,7 +142,7 @@ client.on('ready', (reaction, user) => {
   client.user.setActivity(` ${status}`, {type: 'PLAYING'}); //set status of bot when it's online
 
   //fetch message for reaction roles
-  client.guilds.cache.get("796168991458066453").channels.cache.get("797261159035306004").messages.fetch("797649294243921961");
+  //client.guilds.cache.get("796168991458066453").channels.cache.get("797261159035306004").messages.fetch("797649294243921961");
 
   console.log("Bot startup successful!");
 });
@@ -470,6 +472,7 @@ client.on("message", async message => {
   //level analysis
   var permissionLevel = 0;
   if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
+  else if(message.author.roles.find(r => r.id == "834812051665846284")) permissionLevel = 8; //Cat Core Council
 
   //actually execute commandFiles
   if(message.author.bot) return;

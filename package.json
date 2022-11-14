@@ -1,7 +1,7 @@
 {
   "name": "discord-bot",
   "version": "1.0.0",
-  "description": "A more professional discord bot for a specific discord server!",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,28 +9,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "child_process": "^1.0.2",
+    "@discordjs/opus": "^0.7.0",
     "curl": "^0.1.4",
-    "discord.js": "^12.5.1",
+    "discord-youtube-api": "^0.1.0",
+    "discord.js": "^12.5.3",
+    "ffmpeg": "0.0.4",
     "ffmpeg-static": "^4.4.0",
+    "fluent-ffmpeg": "^2.1.2",
     "fs": "0.0.1-security",
-    "node-fetch": "^2.6.1",
+    "node-twitch": "^0.4.5",
     "pm2": "^4.5.5",
-    "sqlite3": "^5.0.2",
-    "ytdl-core": "^4.9.2",
-    "ytpl": "^2.3.0",
+    "request": "^2.88.2",
+    "sqlite3": "^5.1.2",
+    "twitch": "^4.6.7",
+    "ytdl-core": "^4.10.0",
+    "ytpl": "^2.2.3",
     "ytsr": "^3.6.0"
-  },
-  "devDependencies": {
-    "@types/node-fetch": "^2.6.1",
-    "eslint": "^8.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/YouLikeCats/discord-bot.git"
-  },
-  "bugs": {
-    "url": "https://github.com/YouLikeCats/discord-bot/issues"
-  },
-  "homepage": "https://github.com/YouLikeCats/discord-bot#readme"
+  }
 }

@@ -48,28 +48,12 @@ exports.run = async (client, message, args, level) => {
 
       rankxp += rankadd;
 
-      var currency = 0;
-
-      let getCurrencyPromise = new Promise(resolve => {
-        db.all(`SELECT * FROM currency WHERE id = ${id} AND guild = ${message.guild.id}`, (err, rows) => {
-          if(rows.length == 0) currency = 0;
-          else {
-            rows.forEach(row => {
-              currency = row.currency;
-            });
-          }
-        });
-
-        setTimeout(() => resolve("YEYEYE"), 1000);
-      });
-
-      let getCurrencyResult = await getCurrencyPromise;
 
 
       Embed.setDescription(
         `Joined: ${Intl.DateTimeFormat("en-US").format(member1.joinedAt)}\nID: ${
           member1.id
-        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}\n${currencyname}: ${currency}`
+        }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}`
       );
       return message.channel.send(Embed);
 }

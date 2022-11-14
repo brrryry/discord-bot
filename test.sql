@@ -1,0 +1,1 @@
+SELECT * FROM bhmatches WHERE winner LIKE '%302923939154493441%' AND winner LIKE '% %' OR loser LIKE '%302923939154493441%' AND loser CONTAINS '% %'
