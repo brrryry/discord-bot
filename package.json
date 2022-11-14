@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "vKitsu",
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.7.0",
@@ -22,6 +22,7 @@
     "request": "^2.88.2",
     "sqlite3": "^5.1.2",
     "twitch": "^4.6.7",
+    "twitch-cli": "^0.0.2",
     "ytdl-core": "^4.10.0",
     "ytpl": "^2.2.3",
     "ytsr": "^3.6.0"
