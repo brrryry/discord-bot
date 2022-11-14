@@ -1,90 +1,79 @@
-//Basic requirements
+/*
+File: index.js
+Version: v1
+Contributors:
+  -vKitsu
+Description:
+  Main file!
+*/
+
+//Basic Requirements/Dependencies
 const Discord = require('discord.js');
 const curl = require('curl');
 const request = require('request');
 const fetch = require("node-fetch").default;
 var exec = require('child_process').exec;
 const fs = require ("fs");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchclientid, twitchsecret, k_score, score_constant} = require("./config.json"); //get config variables
+const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchusername} = require("./config.json"); //get config variables
 
 //SQL database setup
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 
-//
+//Map Commands for Dynamic + Automatic Command Adding
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 
+//Song Queues
 global.squeue = new Map();
 
-//message logs and xp setup
-let messageLogs = [];
-let warnLogs = [];
-let xpMessage = [];
+//Message Log, Modlog and XP Variables
+let messageLogs = []; //Messages will be found here.
+let warnLogs = []; //Warn Logs will be found here.
+let xpMessage = []; //For each user, track the messaage they sent in the last 60 seconds.
 
-const blacklisted = [];
+//Mapping Commands
+const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js")); //Get JS Command Files
 
-messageLogs.push({
-    "message": "1",
-    "guild": "1",
-    "author": "1",
-    "time": "1"
-});
-
-xpMessage.push({
-  "author": "1",
-  "guild": "1",
-  "lastTime": "1"
-});
-
-warnLogs.push({
-  "author": "1",
-  "time": "1"
-});
-
-//command handler setup
-const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
-
-for(const file of commandFiles) {
+for(const file of commandFiles) { //Loop Through Files
   const command = require(`./commands/${file}`);
-  client.commands.set(command.config.name, command);
-  if(command.config.aliases) {
-    for(i = 0; i < command.config.aliases.length; i++) { //aliases!
+  client.commands.set(command.config.name, command); //Put in Collection
+  if(command.config.aliases) { //If there's aliases, add them
+    for(i = 0; i < command.config.aliases.length; i++) { 
       console.log(`\tALIAS: ${command.config.aliases[i]}`);
       client.commands.set(command.config.aliases[i], command);
     }
 
   }
-  console.log(`Loaded ${command.config.name}. (Level ${command.config.permissionLevel})`);
+  console.log(`Loaded ${command.config.name}. (Level ${command.config.permissionLevel})`); //Verify that command loaded in terminal
 }
 
-//twitch live loop
-//id: 629732208
+//Setup for Twitch Status Infinite Loop
 const botroom = "797358307781509140"
 let twitchlive = false;
-var twitchtoken = "1";
-const twitchtokenurl = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${twitchclientid}&redirect_uri=https://bryanchan.org&scope=viewing_activity_read`;
-
-const twitchRefreshToken = async function Run() {
-  let twitchAuthPromise = new Promise((reject, resolve) => {
-      exec('twitch token', (error, err, out) => {
-          resolve("!");
-      });
-  }).catch(error => {
-    //do nothing lmao
-  });
-  let twitchAuthResult = await twitchAuthPromise;
-  twitchtoken = twitchAuthResult.out.substring(38).replace("\n", "");
-}
-
+var accesstoken = "1";
 let twitchSearchResult = "";
 
+//TWITCH CODE STARTS
 const twitchLive = async function Run() {
+  //When this function is called, it checks to see if the streamer in twitchSearch is live. (twitchSearch is in config.json)
+  //First, check to make sure that the token works:
+  fetch('https://id.twitch.tv/oauth2/validate', {"headers": {"Authorization": "Bearer " + accesstoken}}).then(response => response.json()).then(async response => {
+    if(response.status && response.status == 401) { //if status 401, the token is invalid, change it
+      let twitchAuthPromise = new Promise((reject, resolve) => {
+        exec('twitch token', (error, err, out) => {
+            accesstoken = out.substring(38).replace("\n", ""); //set accesstoken to the access token from twitch cli
+            resolve("Twitch Token Refreshed");
+        });
+      }).catch(error =>{});
+      let twitchAuthResult = await twitchAuthPromise;
+    }
+  });
 
+  //Now, search using twitchusername (in config)!
   let twitchSearchResultError = "";
-
   let twitchSearchPromise = new Promise((reject, resolve) => {
-    exec(`twitch api get /streams -q user_login=youlikec3ts`, (error, out, err) => {
+    exec(`twitch api get /streams -q user_login=${twitchusername}`, (error, out, err) => {
       if(error) reject(error);
       else resolve({err, out});
     })
@@ -93,313 +82,232 @@ const twitchLive = async function Run() {
   });
 
   twitchSearchResult = await twitchSearchPromise;
-  //console.log(twitchSearchResult);
-  //console.log(twitchSearchResultError);
-
-  //in the case that the error gives the result (which apparently happens sometimes?????)
+  
+  //if there is NO result and an ERROR, try to parse the error to see if a stream is live!
   if(twitchSearchResult == undefined && twitchSearchResultError != undefined) twitchSearchResult = twitchSearchResultError;
+  //try to see if the response can be parsed into a JSON. If it can, there's a stream! Otherwise, return and end here.
   try {
     twitchSearchResult = JSON.parse(twitchSearchResult.out);
   } catch (error) {
-    twitchlive = false;
+    twitchlive = false; //set it so that the live variable is off
     return;
   }
 
-  if(twitchSearchResult.data != undefined && twitchSearchResult.data.length > 0 && twitchlive === false) {
-    //if data result is defined
+  if(twitchSearchResult.data != undefined && twitchSearchResult.data.length > 0 && twitchlive === false) { //if there's data from the stream and it just started...
+    //NOTE: twitchlive == false is IMPORTANT. This prevents the bot from pinging every single time this function is called while the stream is live.
+    var twitchuser = twitchSearchResult.data[0].user_name; //twitch username
+    var twitchgame = twitchSearchResult.data[0].game_name; //stream game
+    var twitchtitle = twitchSearchResult.data[0].title; //stream title
+    let twitchthumbnail = twitchSearchResult.data[0].thumbnail_url.replace("-{width}x{height}", "-1920x1080"); //provide a thumbnail!
 
-    var twitchuser = twitchSearchResult.data[0].user_name;
-    var twitchgame = twitchSearchResult.data[0].game_name;
-    var twitchtitle = twitchSearchResult.data[0].title;
-    var twitchstarttime = twitchSearchResult.data[0].started_at;
-    let twitchthumbnail = twitchSearchResult.data[0].thumbnail_url;
-
-    twitchthumbnail = twitchthumbnail.replace("-{width}x{height}", "-1920x1080");
-
+    //Create + Customize embed!
     const twitchEmbed = new Discord.MessageEmbed().setColor("A020F0");
-    twitchEmbed.setTitle("Cats Is Live!");
+    twitchEmbed.setTitle(`${twitchuser} is live!`);
     twitchEmbed.addField("Link:", "https://twitch.tv/youlikec3ts");
     twitchEmbed.addField("Title:", `${twitchtitle}`);
     twitchEmbed.addField("Game:", `${twitchgame}`);
     twitchEmbed.setImage(`${twitchthumbnail}`);
     twitchEmbed.setThumbnail(`${twitchthumbnail}`);
 
+    //Get Send Channel Data
     const twitchGuild = client.guilds.cache.get("796168991458066453");
     const twitchChannel = twitchGuild.channels.cache.get("796169933180239894");
-    twitchChannel.send(`@everyone, Cats is streaming!\n`, {embed: twitchEmbed});
-    twitchlive = true;
+    twitchChannel.send(`@everyone, ${twitchuser} is streaming!\n`, {embed: twitchEmbed});
+    twitchlive = true; //Now, we're streaming!
+    return;
   } else if ((twitchSearchResult.data == undefined || twitchSearchResult.data.length == 0) && twitchlive === true) {
-    twitchlive = false;
+    twitchlive = false; //If we STOP streaming, turn twitchlive to false.
   }
-
-  //console.log(twitchlive);
 }
-setInterval(twitchLive, 60000);
-setInterval(twitchRefreshToken, 1000 * 360);
+setInterval(twitchLive, 5000); //Checks every MINUTE to see if the stream is live
+//TWITCH CODE ENDS
 
-//client startup
+
+//On Client Startup
 client.on('ready', (reaction, user) => {
   client.user.setActivity(` ${status}`, {type: 'PLAYING'}); //set status of bot when it's online
-
-  //fetch message for reaction roles
-  //client.guilds.cache.get("796168991458066453").channels.cache.get("797261159035306004").messages.fetch("797649294243921961");
-
   console.log("Bot startup successful!");
 });
 
-//client on member join
+//On Member Joining
 client.on("guildMemberAdd", async member => {
-  var welcomeChannel = member.guild.channels.cache.find(c => c.name == "welcome"); //welcome channel
-  if(welcomeChannel != null) welcomeChannel.send(`<@!${member.id}> has just joined the server!`); //only accessible through dev server
+  //IF the Gateway channel exists, send a message
+  if(member.guild.channels.cache.find(c => c.id == gatewaychannelid) != null) welcomeChannel.send(`<@!${member.id}> has just joined the server!`); 
 
-  if(member.guild.id == "796168991458066453") {
-    var memberRole = member.guild.roles.cache.get("797260531378552842");
-    member.roles.add(memberRole);
-  }
-  //calculate levels upon joining with await/async stuff
+  //If the bot is in the main server, add the default role
+  if(member.guild.id == "796168991458066453") member.roles.add(member.guild.roles.cache.get("797260531378552842"));
+
+  //Load Previous Levels/XP
   let setLevelOnJoinPromise = new Promise((resolve) => {
     db.all(`SELECT * FROM xp WHERE id = "${member.id}" AND guild = ${member.guild.id}`, (err, rows) => {
-      if(rows.length == 0) {
-        updateLevelRoles(member, 0);
-        db.run(`INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
+      if(rows.length == 0) { //If there is no previous data
+        updateLevelRoles(member, 0); //Give them basic roles
+        db.run(`INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]); //Insert new data
       } else {
         rows.forEach(row => {
-          //console.log("updating!");
-          if(member.guild.id == "796168991458066453") updateLevelRoles(member, row.level);
+          updateLevelRoles(member, row.level); //Update Level Roles!
         });
       }
     });
-      setTimeout(() => resolve("!"), 1000);
+      setTimeout(() => resolve("Member Join Roles Updated"), 1000);
   })
   let setLevelOnJoinResult = await setLevelOnJoinPromise;
-
-  let prestigePromise = new Promise((resolve) => {
-
-    db.all(`SELECT * FROM currency WHERE id = ${member.id} AND guild = ${member.guild.id}`, (err, rows) => {
-      if(rows.length == 0) {
-        db.run(`INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)`, [member.id, member.guild.id, 0, 0]);
-      } else {
-        rows.forEach(row => {
-          if(member.guild.id == "796168991458066453") updatePrestigeRoles(member, row.prestige);
-        });
-      }
-    });
-    setTimeout(() => resolve("yeyeyeyeyeye"), 1000);
-  });
-
-  let prestigeResult = await prestigePromise;
-
 });
 
-//client on member remove
+//On Member Leavine
 client.on("guildMemberRemove", async member => {
-  var goodbyeChannel = member.guild.channels.cache.find(c => c.name == "server-gateway");
-  if(goodbyeChannel != null) goodbyeChannel.send(`<@!${member.id}> just left the server!`);
 });
 
-//client on edited message
+//On Edited Message
 client.on("messageUpdate", async (oldmessage, newmessage) => {
-  if(oldmessage.author.bot) return;
+  //If the old message is the same as the new message OR the old message is a bot, ignore it
   if(oldmessage.content === newmessage.content || oldmessage.author.bot) return;
-  var messageChannel = oldmessage.guild.channels.cache.find(c => c.name == "message-logs");
+  var messageChannel = oldmessage.guild.channels.cache.find(c => c.id == messagechannelid);
 
-  var embed = new Discord.MessageEmbed().setTitle("Message Edited").setColor("#ffff00").setDescription(`User: <@!${newmessage.member.id}>\nChannel: <#${newmessage.channel.id}>\n\nOld Message:\n${oldmessage.content}\n\nNew Message:\n${newmessage.content}`);
-  return messageChannel.send(embed);
+  //Create Embed to put in the modlogs channel
+  var embed = new Discord.MessageEmbed().setTitle("Message Edited").setColor("#ffff00").setDescription(`User: <@!${newmessage.member.id}>\n
+    Channel: <#${newmessage.channel.id}>\n\n
+    Old Message:\n${oldmessage.content}\n\n
+    New Message:\n${newmessage.content}`);
+
+  //If the modlogs channel exists, send the embed. Otherwise, just return.
+  if(messageChannel != null) return messageChannel.send(embed); 
+  return;
 })
 
-//client on deleted message
+//On Deleted Message
 client.on("messageDelete", async message => {
-  if(message.author.bot) return;
-  var messageChannel = message.guild.channels.cache.find(c => c.name == "message-logs");
+  if(message.author.bot) return; //If the message was from a bot, ignore it
+  var messageChannel = message.guild.channels.cache.find(c => c.id == messagechannelid); //Look for message channel
 
-  var embed = new Discord.MessageEmbed().setTitle("Message Deleted").setColor("#ff0000").setDescription(`User: <@!${message.member.id}>\nChannel: <#${message.channel.id}>\nMessage:\n${message}`);
-  return messageChannel.send(embed);
+  //Create Embed to send in Message Channel
+  var embed = new Discord.MessageEmbed().setTitle("Message Deleted").setColor("#ff0000")
+    .setDescription(`User: <@!${message.member.id}>\n
+    Channel: <#${message.channel.id}>\n
+    Message:\n${message}`);
+
+  //If the message channel exists, send the embed. Otherwise return nothing
+  if(messageChannel != null) return messageChannel.send(embed);
+  return;
 })
 
-//identifiers and reaction role names
-var identifiers = []; //music, programming, voter, random, Brawlhalla, Overwatch, MC, MapleStory
-var reactionRoleNames = [];
-
-//on message react (used for reaction roles)
-client.on("messageReactionAdd", async (reaction, user) => {
-  console.log(reaction.emoji.identifier);
-  for(var i = 0; i < identifiers.length; i++) {
-    let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
-    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") {
-      reaction.message.guild.members.cache.get(user.id).roles.add(reactionRole);
-    }
-  }
-})
-
-client.on("messageReactionRemove", async (reaction, user) => {
-  console.log(reaction.emoji.identifier);
-  for(var i = 0; i < identifiers.length; i++) {
-    let reactionRole = reaction.message.guild.roles.cache.get(reactionRoleNames[i]);
-    if(reaction.emoji.identifier == identifiers[i] && reaction.message.channel.id == "797261159035306004") {
-      reaction.message.guild.members.cache.get(user.id).roles.remove(reactionRole);
-    }
-  }
-})
-
-//client on message send
+//On Message Sent
 client.on("message", async message => {
 
-  //system variables
+  //System Variables
   var antiSpamOn = true;
   var xpSystemOn = true;
   var debugMode = false;
 
-  if(debugMode && message.channel.id != "797358307781509140") return;
-
-  //check for blacklisted words
-  for(i = 0; i < blacklisted.length; i++) {
-    if(message.content.toLowerCase().includes(blacklisted[i])) {
-      message.channel.send("Don't use that word!");
-      message.delete();
-    }
-  }
-
-
   let date = new Date();
 
+  //If person is muted, disregard the message
   if(!message.author.bot && message.member.roles.cache.some(role => role.name === 'Muted')) return;
 
-  //secret codes!
-  if(message.content.toLowerCase().includes("eggbot")) {
-    message.channel.send(`[Secret Code]: Thanks for watching my twitch :D`).then(msg => {
-      msg.delete({timeout: 3000});
-    });
-  }
-
-
-
+  //Push the message into the MessageLogs list. This will be used to find spam.
   messageLogs.push({
       "message": message.content,
       "author": message.author.id,
       "time": date.getTime()
   });
+  if(messageLogs.length >= 500) messageLogs.shift(); //If the list is too long, start shifting to delete earlier messages
 
-  if(messageLogs.length >= 500) messageLogs.shift();
 
-
-  //xp system
+  //XP SYSTEM
   if(xpSystemOn && !message.author.bot && message.channel.id != "835002640688480297" && message.channel.id != "797358307781509140") { //not in bot room
-    var notInitYet = true;
+    var counted = false; //Detects if message was already counted for XP
+    var initialized = false;
+
     for(var i = 0; i < xpMessage.length; i++) {
-      if(message.author.id == xpMessage[i].author && message.guild.id == xpMessage[i].guild) notInitYet = false;
+      if(message.author.id == xpMessage[i].author && message.guild.id == xpMessage[i].guild) { //if a person is already in the list
+        initialized = true;
+        //if a message was sent in the last 60 seconds, counted becomes true
+        if(date.getTime() - xpMessage[i].lastTime < 60000) counted = true;
+      }
     }
 
-    var alreadyLooped = false;
-
-
-    for(var i = 0; i < xpMessage.length; i++) {
-      if(!alreadyLooped && (notInitYet || (message.author.id === xpMessage[i].author && date.getTime() - xpMessage[i].lastTime >= 60000))) { //more than 60 seconds
-        //set and add xp
-        if(notInitYet) {
-          xpMessage.push({
-            "author": message.author.id,
-            "guild": message.guild.id,
-            "lastTime": date.getTime()
-          })
-        }
-        else xpMessage[i].lastTime = date.getTime();
-        if(xpMessage.length >= 500) xpMessage.shift();
-
-        var randomXP = Math.floor(Math.random() * 15) + 10;
-        let xpPromise = new Promise(resolve => {
-          db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
-            if(!row) db.run("INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)", [message.member.id, message.guild.id, 0, 0]);
-            else {
-              db.run(`UPDATE xp SET xpcount = ${row.xpcount} + ${randomXP} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
-              if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level = level up
-                db.run(`UPDATE xp SET level = ${row.level} + 1 WHERE id = ${message.member.id} AND guild = ${message.guild.id}`);
-                if(message.member.guild.id === "796168991458066453") updateLevelRoles(message.member, row.level + 1);
-                message.reply(`you just reached level ${row.level + 1}! Congratulations!`);
-              }
-            }
-          });
-
-          setTimeout(() => resolve("!"), 1000);
-        });
-        let xpResult = await xpPromise;
-
-        var randomCoinChance = Math.floor(Math.random() * 20);
-
-        if(randomCoinChance == 0) { //chance of getting Cat Coins WITH an XP gain
-          console.log("got currency");
-          var randomCoin = Math.floor(Math.random() * 5) + 5;
-          let coinPromise = new Promise(resolve => {
-            db.get(`SELECT * FROM currency WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => {
-              if(!row) db.run("INSERT INTO currency (id, guild, currency, prestige) VALUES (?, ?, ?, ?)", [message.member.id, message.guild.id, randomCoin, 0]);
-              else {
-                db.run(`UPDATE currency SET currency = ${row.currency} + ${randomCoin} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`);
-              }
-            });
-
-            setTimeout(() => resolve("a"), 1000);
-          });
-
-          message.reply(`you just gained ${randomCoin} Cat Coins! Congratulations!`);
-          let coinResult = await coinPromise;
-        }
-        alreadyLooped = true;
+    if(!counted) { //If the message was longer than 60 seconds...
+      //Update/Add user into the XPLogs list
+      if(!initialized) { //If they aren't in the list yet, push their value in
+        xpMessage.push({
+          "author": message.author.id,
+          "guild": message.guild.id,
+          "lastTime": date.getTime()
+        })
       }
+      else xpMessage[i].lastTime = date.getTime(); //Otherwise, update the time.
+
+      //Calculate and input XP into the database
+      var randomXP = Math.floor(Math.random() * 15) + 10; //Random value from 10-25
+      let xpPromise = new Promise(resolve => {
+        db.get(`SELECT * FROM xp WHERE id = "${message.author.id}" AND guild = "${message.guild.id}"`, (err, row) => { //Get row in table
+          //If there's no row, create one
+          if(!row) db.run("INSERT INTO xp (id, guild, level, xpcount) VALUES (?, ?, ?, ?)", [message.member.id, message.guild.id, 0, 0]);
+          else {
+            db.run(`UPDATE xp SET xpcount = ${row.xpcount} + ${randomXP} WHERE id = ${message.author.id} AND guild = ${message.guild.id}`); //update xp
+            if(row.xpcount >= 5 * Math.pow(row.level, 2) + (75 * row.level) + 100) { //5x^2 + 75x + 100 where x = level --> Formula to level up
+              db.run(`UPDATE xp SET level = ${row.level} + 1 WHERE id = ${message.member.id} AND guild = ${message.guild.id}`); //Update Level
+              if(message.member.guild.id === "796168991458066453") updateLevelRoles(message.member, row.level + 1); //Update Roles according to Level
+              message.reply(`you just reached level ${row.level + 1}! Congratulations!`); //Send Message of Congratulations
+            }
+          }
+        });
+
+        setTimeout(() => resolve("XP Given"), 1000);
+      });
+      let xpResult = await xpPromise;
     }
   }
-
-  //anti spam System
-
-  if(antiSpamOn && !message.author.bot) { //anti spam system is on
-    var msgCount = 0; //message count
+    
+  //ANTI SPAM SYSTEM
+  if(antiSpamOn && !message.author.bot) {
+    //Get number of message sent in the last couple time intervals.
+    var msgCount = 0;
     for(var i = 0; i < messageLogs.length; i++) {
-      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000 /*&& messageLogs[i].guild == message.guild.id*/) {
-        msgCount++; //6 msg in 3 seconds
-      }
+      //If message was sent in the last 3 seconds, increment
+      if(messageLogs[i].author == message.author.id && date.getTime() - messageLogs[i].time <= 3000) msgCount++;
+      //If the SAME message was sent in the last 15 seconds, increment
       else if (messageLogs[i].author == message.author.id && messageLogs[i].message == message.content && date.getTime() - messageLogs[i].time <= 15000 && messageLogs[i].guild == message.guild.id) msgCount++; //6 repeated msgs in 15 seconds
     }
-
-    console.log(msgCount);
 
     var warnSpam = false;
     var muteSpam = false;
     var warnedRecently = false;
     var warnCount = 0;
-    var muteCount = 0;
+    var muteCase = 1;
 
-    //check if person was warned warned recently
     for(var i = 0; i < warnLogs.length; i++) {
-      if(date.getTime() - warnLogs[i].time < 10000 && message.author.id === warnLogs[i].author) warnedRecently = true;
-      if(message.author.id === warnLogs[i].author) warnCount++; //check how many times someone got warned in the past 500 messages
+      //Get number of warns given in the last 5 minutes.
+      if(date.getTime() - warnLogs[i].time < (1000 * 60 * 5) && message.author.id === warnLogs[i].author) warnedRecently = true;
+      //If person was warned within the last 500 messages, increment warnCount
+      if(message.author.id === warnLogs[i].author) warnCount++;
     }
 
+    //If someone spammed more than 6 messages, trigger code below.
     if(msgCount >= 6 && !message.member.roles.cache.some(role => role.name === 'Muted') && !warnedRecently) warnSpam = true;
 
-
-    //purge the last 6 messages
-    if(warnSpam) {
+    if(warnSpam) { //^^
+      //Purge the spammed messages
       message.channel.bulkDelete(msgCount, true).catch(error => {
         console.error(err);
       });
 
+      //If person has been warned any multiple of 3 times...
       if((warnCount + 1) % 3 == 0 && warnCount != 0) {
-        //mute!
+        //Check number of times person has been muted
         let muteCountPromise = new Promise(resolve => {
           db.all(`SELECT * FROM modlogs WHERE offender = "${message.author.id}" AND reason = "Spamming [Auto]" AND guild = ${message.guild.id}`, (error, rows) => {
-            //how many times has the person previously been muted?
-            if(!rows) muteCount = 0;
-            else rows.forEach(row => muteCount++);
+            if(!rows) muteCase = 0;
+            else rows.forEach(row => muteCase++);
           });
 
 
           setTimeout(() => resolve("!"), 250);
-        })
-
+        });
         let muteCountResult = await muteCountPromise;
 
-        var muteCase = muteCount + 1;
-
-        //get the date in a string
-        var now = new Date().toLocaleDateString("en-US", {
+        //Get Date in String
+        var now = date.toLocaleDateString("en-US", {
           hourCycle: "h12",
           weekday: "long",
           month: "long",
@@ -412,47 +320,34 @@ client.on("message", async message => {
           timeZone: "America/New_York"
         });
 
-        if(muteCase >= 6) { //if this happens more than 6 times, unappealable ban
+        //If there were more than 6 mutes, ban
+        if(muteCase >= 6) {
           message.author.send(`You were banned (unappealable) for: Spamming [Auto] (x${muteCase})`);
-          const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was U-Banned.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
-
-          //put that modlog in
-          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "U-Ban", 0, "Spamming [Auto]", now]);
-          message.member.ban();
-        } else if (muteCase == 5) { //appealable ban
-          message.author.send(`You were banned (appealable) for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was A-Banned.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
+          message.guild.channels.cache.find(c => c.id = modlogchannelid).send(embed);
 
-          //put that modlog in
-          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "A-Ban", 0, "Spamming [Auto]", now]);
-          message.member.ban();
-        } else if (muteCase == 4) { //kick
-          message.author.send(`You were kicked for: Spamming [Auto] (x${muteCase})`);
-          const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was Kicked.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
-
-          //put that modlog in
-          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "Kick", 0, "Spamming [Auto]", now]);
-          message.member.kick();
-        } else { //mute incrementing by 120 minutes and starting at 120
+          //Input Modlog
+          db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, "U-Ban", 0, "Spamming [Auto]", now]);
+          message.member.ban(); //Ban Person
+        } else { //Otherwise, mute by increment of 2 hours
           message.author.send(`You were muted (${muteCase * 120} minutes) for: Spamming [Auto] (x${muteCase})`);
           const embed = new Discord.MessageEmbed().setTitle(`User ${message.author.username} was Muted for ${muteCase * 120} minutes.`).setColor("#ff0000").addField("Time: ", now).addField("Moderator: ", "Bot [Auto]").addField("Reason: ", "Spam [Auto]");
-          message.guild.channels.cache.find(c => c.name == "modlogs").send(embed);
+          message.guild.channels.cache.find(c => c.id == modlogchannelid).send(embed);
 
-          //put that modlog in
+          //Input Modlog
           db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, "797234744277336094", message.author.id, `Mute`, `${muteCase * 120} minutes`, "Spamming [Auto]", now]);
 
+          //Add Muted Role
           const mutedRole = message.guild.roles.cache.find(r => r.name === 'Muted');
           message.member.roles.add(mutedRole);
           setTimeout(() => {message.member.roles.remove(mutedRole);}, 1000 * 60 * 120 * muteCase);
         }
       }
+      //Otherwise, send a verbal warning!
       else message.channel.send(`Do not spam. You will be muted at every 3rd warn. (This is warning #${warnCount + 1})` );
 
 
-      //warn logs
+      //Push verbal warn to warnLogs list
       warnLogs.push({
         "author": message.author.id,
         "time": date.getTime()
@@ -462,36 +357,30 @@ client.on("message", async message => {
 
   }
 
+  //After all the message parsing, look for commands. If there is no command, ignore
   if(!message.content.startsWith(prefix) || !message.guild) return;
-  //NOTE: No command name can be shorter than 3 letters.
+  const args = message.content.slice(prefix.length).split(" "); //Dissect Arguments
+  const command = args.shift().toLowerCase(); //Find input command
 
-  const args = message.content.slice(prefix.length).split(" ");
-  const command = args.shift().toLowerCase();
-  console.log(command);
-
-  //level analysis
+  //Find Permission Levels
   var permissionLevel = 0;
   if(message.author.id === "302923939154493441") permissionLevel = 10; //my ID
   else if(message.author.roles.find(r => r.id == "834812051665846284")) permissionLevel = 8; //Cat Core Council
 
-  //actually execute commandFiles
-  if(message.author.bot) return;
-
-  //Secret Codes LOL!
-
-
+  //Execute Command File!
   try {
+    //If the command is invalid, return a verbal error.
     if(!client.commands.has(command)) return message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!");
-    let commandFile = client.commands.get(command); //get the command/alias
+    let commandFile = client.commands.get(command); //Find command
+    //If person has a sufficient permission level, run the command.
     if(permissionLevel >= commandFile.config.permissionLevel) commandFile.run(client, message, args, permissionLevel);
-  } catch (error) {
+  } catch (error) { //Command doesn't exist
     console.log(error);
     message.channel.send("Invalid Command! Do ``" + prefix + "help`` for help!");
   }
 });
 
-
-//update level roles function
+//Function to update Level roles
 function updateLevelRoles(member, level) {
 
   //level role initialization
@@ -516,22 +405,5 @@ function updateLevelRoles(member, level) {
 
 }
 
-function updatePrestigeRoles(member, prestige) {
-  var prestigeRoleIDs = ["818671806441455628", "818671880843165747", "818671960137269279", "818672014608695328", "818672107000823840"];
-  var prestigeRoles = [];
-
-  for(const id of prestigeRoleIDs) {
-    var rolePush = member.guild.roles.cache.get(id);
-    member.roles.remove(rolePush);
-  }
-
-  for(var i = 1; i <= prestigeRoleIDs.length; i++) {
-    if(prestige == i) {
-      member.roles.add(prestigeRoles[i - 1]);
-      return;
-    }
-  }
-
-}
-
+//After ALL of that, login!
 client.login(token);
