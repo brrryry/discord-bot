@@ -1,10 +1,7 @@
 /*
 File: index.js
-Version: v1
 Contributors:
   -vKitsu
-Description:
-  Main file!
 */
 
 //Basic Requirements/Dependencies
@@ -15,6 +12,7 @@ const fetch = require("node-fetch").default;
 var exec = require('child_process').exec;
 const fs = require ("fs");
 const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchusername} = require("./config.json"); //get config variables
+const botroom = "797358307781509140";
 
 //SQL database setup
 const sql = require('sqlite3').verbose();
@@ -49,7 +47,6 @@ for(const file of commandFiles) { //Loop Through Files
 }
 
 //Setup for Twitch Status Infinite Loop
-const botroom = "797358307781509140"
 let twitchlive = false;
 var accesstoken = "1";
 let twitchSearchResult = "";
@@ -119,7 +116,7 @@ const twitchLive = async function Run() {
     twitchlive = false; //If we STOP streaming, turn twitchlive to false.
   }
 }
-setInterval(twitchLive, 5000); //Checks every MINUTE to see if the stream is live
+setInterval(twitchLive, 60000); //Checks every MINUTE to see if the stream is live
 //TWITCH CODE ENDS
 
 

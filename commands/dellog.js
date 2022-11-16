@@ -1,20 +1,25 @@
+/*
+File: dellog.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require("discord.js");
+const sql = require('sqlite3').verbose();
+var db = new sql.Database("db.sqlite");
 
 exports.run = (client, message, args, level) => {
-  const Discord = require('discord.js');
-  const sql = require('sqlite3').verbose();
-  var db = new sql.Database("db.sqlite");
-  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+  //If no case number is provided, return
+  if(!args[0]) return message.reply('you must include the case number! Try again.');
 
-    if(level < 5) return;
-    if(!args[0]) return message.reply('you must include the case number! Try again.');
+  //Use case ID to find row in table, and delete row
+  const caseID = parseInt(args[0]);
+  if (isNaN(caseID)) return message.reply('that\'s not a number! Try again.');
+  db.run(`DELETE FROM modlogs WHERE key="${caseID}"`); //Deletion command
 
-    const caseID = parseInt(args[0]);
-   	if (isNaN(caseID)) return message.reply('that\'s not a number! Try again.');
-    db.run(`DELETE FROM modlogs WHERE key="${caseID}"`);
-
-    const embed1 = new Discord.MessageEmbed().setTitle(`Moderation Log Sucessfully Deleted.`);
-    message.channel.send(embed1);
+  const embed1 = new Discord.MessageEmbed().setTitle(`Moderation Log Sucessfully Deleted.`);
+  message.channel.send(embed1);
 }
 
 exports.config = {

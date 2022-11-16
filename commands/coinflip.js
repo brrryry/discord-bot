@@ -1,16 +1,15 @@
-const Discord = require('discord.js');
-const sql = require('sqlite3').verbose();
-const ytdl = require('ytdl-core');
-const ytpl = require('ytpl');
-const ytsr = require('ytsr');
-const exec = require('child_process').exec;
-var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+/*
+File: coinflip.js
+Contributors:
+  -vKitsu
+*/
 
-let signin_ids = [];
+//Get Dependencies
+const Discord = require('discord.js');
 
 exports.run = async (client, message, args, level) => {
   let value = Math.floor(Math.random() * 2); //0 or 1
+  //Output based on value!
   if(value == 0) return message.reply("The coin landed on heads!");
   return message.reply("The coin landed on tails!");
 }

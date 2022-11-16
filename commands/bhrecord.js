@@ -1,20 +1,26 @@
+/*
+File: bhrecord.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 const fetch = require("node-fetch");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, k_score, score_constant} = require("../config.json"); //get the prefix, token, status and welcome channel id
+const {k_score, score_constant} = require("../config.json"); //get config stuff
 
 
 exports.run = async (client, message, args, level) => {
-    let requestWait = null;
-    var user = message.author.id;
-    var embed = new Discord.MessageEmbed()
+    var embed = new Discord.MessageEmbed(); //Create Embed
 
+    //If incorrect amount of arguments (2 - 1v1s, 4 - 2v2s)
     if(args.length != 2 && args.length != 4) return message.channel.send("You don't have the right number of arguments. Try again!")
+    let mentions = message.mentions.users.toJSON(); //get all mentions
+    var elos = [] //list to store ids and elos
 
-    let mentions = message.mentions.users.toJSON();
-    var elos = []
-
+    //Format Current Time
     var now = new Date().toLocaleDateString("en-US", {
         hourCycle: "h12",
         weekday: "long",
@@ -29,11 +35,12 @@ exports.run = async (client, message, args, level) => {
       });
 
 
-    //from here, take different paths depending on whether or not it's a 1v1 or 2v2
-    if(args.length == 2) { //1v1
+    //Check for 1v1s or 2v2s data
+    //NOTE: This code can be optimized. TBD
+    if(args.length == 2) { //1v1s
         message.channel.send("Fetching Data...");
 
-        //grab ids and elos
+        //Grab IDs and ELOs from each necessary row
         for(i = 0; i < args.length; i++) {
             var notFound = false;
             var id = ""
@@ -63,7 +70,7 @@ exports.run = async (client, message, args, level) => {
             });
         }
 
-        //calculate elo change by winner percentage
+        //Calculate ELO
         let chance = 1 / (1 + Math.pow(10, ((elos[1].elo - elos[0].elo) / 1000)))
         let eloChange = k_score * (1 - chance)
         winnerElo = elos[0].elo + eloChange
@@ -78,7 +85,7 @@ exports.run = async (client, message, args, level) => {
         embed.setTitle("Match Recorded (1v1)");
         embed.setDescription(`Winner: <@!${elos[0].id}> (Updated ELO: ${winnerElo.toFixed(3)})\nLoser: <@!${elos[1].id}> (Updated ELO: ${loserElo.toFixed(3)})`);
 
-    } else { //2v2
+    } else { //2v2s
         message.channel.send("Fetching Data...")
         for(i = 0; i < args.length; i++) {
             var notFound = false
@@ -86,7 +93,6 @@ exports.run = async (client, message, args, level) => {
             var elo = 0
             let getELO = new Promise(resolve => {
                 db.all(`SELECT * FROM bhelo2 WHERE discordID = "${mentions[i].id}"`, (err, rows)  => {
-                    //console.log(rows);
                     if(!rows || rows.length == 0){
                         notFound = true;
                         id = mentions[i].id
@@ -109,14 +115,14 @@ exports.run = async (client, message, args, level) => {
                 "elo": elo
             });
         }
-    
-        //console.log(elos)
+
+        //Calculate ELOs by AVERAGE of each team's solo ELO
         let winneraverage = (elos[0].elo + elos[1].elo) / 2
         let loseraverage = (elos[2].elo + elos[3].elo) / 2
         let chance = 1 / (1 + Math.pow(10, ((loseraverage - winneraverage) / 1000)))
         let eloChange = k_score * (1 - chance)
 
-        //update values
+        //Update Table Values
         message.channel.send("Updating Tables...")
         for(i = 0; i < 4; i++) {
             if(i < 2) elos[i].elo += eloChange
@@ -132,6 +138,8 @@ exports.run = async (client, message, args, level) => {
         }
         embed.setDescription(description);
     }
+
+    //Return Embed, confirm that scores are in the table
     embed.setFooter(`Ranking System Details:\nK-Score: ${k_score}\nScore Constant: ${score_constant}`);
     return message.channel.send(embed);
 

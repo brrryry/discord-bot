@@ -1,12 +1,20 @@
+/*
+File: ban.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
+const Discord = require('discord.js');
+const sql = require('sqlite3').verbose();
+var db = new sql.Database("db.sqlite");
+const {modlogchannelid} = require("../config.json");
+
 exports.run = async (client, message, args, level) => {
-  const Discord = require('discord.js');
-  const sql = require('sqlite3').verbose();
-  var db = new sql.Database("db.sqlite");
-  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+  if(!args[0]) return message.reply(`you must include the user to ban! Try again.`); //Providing a user
+  if(!args[1]) return message.reply(`you must give a reason! Try again.`); //Providing a reason
 
-  if(!args[0]) return message.reply(`you must include the user to ban! Try again.`);
-  if(!args[1]) return message.reply(`you must give a reason! Try again.`);
-
+  //Try to look for a user OR discord ID in args[0]
   var user = message.mentions.users.first();
   if(user == null || user == undefined) {
     try {
@@ -16,12 +24,14 @@ exports.run = async (client, message, args, level) => {
     }
   }
 
+  //Piece together all other args as "reason"
   const reason = args.slice(1).join(" ");
   if(user == null || user == undefined) return message.reply("this user cannot be found!");
 
+  //Check if target is a moderator
   if(member.roles.cache.find(r => r.name === "Moderator") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
 
-
+  //Format date
   var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
       weekday: "long",
@@ -35,12 +45,20 @@ exports.run = async (client, message, args, level) => {
       timeZone: "America/New_York"
     });
 
+    //Insert Modlog
     db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, message.author.id, user.id, "aban", 0, reason, now]);
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Banned.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
-    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
-    message.mentions.users.first().send("You were banned (appealable) for: " + reason);
-    message.mentions.members.first().ban();
-    message.channel.send("Moderation Log Successful.")
+    
+    //Create/Send Embed
+    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Banned.`)
+      .setColor("#ffff00")
+      .addField("Time: ", now)
+      .addField("Moderator: ", `<@!${message.author.id}>`)
+      .addField("Reason: ", reason);
+    message.guild.channels.cache.find(c => c.id == modlogchannelid).send(embed);
+
+    message.mentions.users.first().send("You were banned (appealable) for: " + reason); //DM Ban Notification
+    message.mentions.members.first().ban(); //Ban
+    message.channel.send("Moderation Log Successful.") //Report Successful Logs
     return;
 }
 
