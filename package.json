@@ -10,11 +10,13 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.7.0",
+    "@discordjs/voice": "github:discordjs/voice",
     "curl": "^0.1.4",
     "discord-youtube-api": "^0.1.0",
+    "discord-ytdl-core": "^5.0.4",
     "discord.js": "^12.5.3",
     "ffmpeg": "0.0.4",
-    "ffmpeg-static": "^4.4.0",
+    "ffmpeg-static": "^4.4.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs": "0.0.1-security",
     "node-twitch": "^0.4.5",
@@ -23,7 +25,7 @@
     "sqlite3": "^5.1.2",
     "twitch": "^4.6.7",
     "twitch-cli": "^0.0.2",
-    "ytdl-core": "^4.10.0",
+    "ytdl-core": "^4.11.2",
     "ytpl": "^2.2.3",
     "ytsr": "^3.6.0"
   }

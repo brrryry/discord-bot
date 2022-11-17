@@ -17,7 +17,7 @@ exports.run = (client, message, args, level) => {
     var outputValue = `\`\`\`ARM\n===<${args[0].toUpperCase()}>===\n`;
     var cate = false;
     for(const file of commandFiles) {
-      const command = require(`./${file}`);
+      const command = require(`./${file}`); //Get command file
       if(args[0].toLowerCase() === command.config.category && command.config.permissionLevel <= level) {
         outputValue += `'${prefix}${command.config.name}': ${command.config.description}\n`;
         console.log(file);
@@ -27,7 +27,7 @@ exports.run = (client, message, args, level) => {
 
     outputValue += `\nUse ${prefix}usage <command name> to get more information on a specific command!`;
 
-    //if there is no category
+    //If there is no valid command by that name
     if(!cate) return message.reply("that isn't a valid category OR none of the commands are ones that you can use! Try again.");
 
     return message.channel.send(outputValue + "```");
@@ -36,6 +36,7 @@ exports.run = (client, message, args, level) => {
 
   //otherwise use normal help commands
   var categories = [];
+  //Get all command categories
   for(const file of commandFiles) {
     const command = require(`./${file}`);
     var categoryFound = false;
@@ -46,6 +47,7 @@ exports.run = (client, message, args, level) => {
     if(!categoryFound) categories.push(command.config.category);
   }
 
+  //Create/Customize embed
   var embed = new Discord.MessageEmbed().setTitle("Help Hub!");
   var descValue = "";
   descValue += `The prefix of this bot is currently \`\`${prefix}\`\`.\n\nCurrent Categories: `;

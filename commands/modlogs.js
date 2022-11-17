@@ -1,15 +1,17 @@
+/*
+File: modlogs.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
 
 exports.run = async (client, message, args, level) => {
-
-
+    //Find target
     var user = message.mentions.users.first();
-
-
-
     if(user == null || user === undefined) {
       try {
         user = client.users.cache.get(args[0]);
@@ -18,13 +20,14 @@ exports.run = async (client, message, args, level) => {
       }
     }
 
+    //Find modlogs in table
     db.all(`SELECT * FROM modlogs WHERE offender = "${user.id}" AND guild = "${message.guild.id}"`, (err, rows) => {
       if(rows.length == 0) return message.reply("no logs were found!");
       var embed = new Discord.MessageEmbed().setTitle(`${user.username}\`s Modlogs: `);
       var value = "";
       var count = 0;
 
-      rows.forEach(row => {
+      rows.forEach(row => { //Get data from each row (entry)
         var rowMuteTime = row.modtype;
         if(row.muteTime != "0") {
           if(row.modtype == "ImageMute") rowMuteTime = `Image Mute (${row.muteTime})`;
@@ -46,7 +49,6 @@ exports.run = async (client, message, args, level) => {
       if(count == 0) return message.channel.send("No modlogs were found!");
       embed.setDescription(value);
       message.channel.send(embed);
-
       message.channel.send(count + " modlogs found!");
     });
 }

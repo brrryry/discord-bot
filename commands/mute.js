@@ -1,13 +1,23 @@
+/*
+File: mute.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+const {modlogchannelid} = require("../config.json"); //get modlog channel
 
 exports.run = (client, message, args, level) => {
+    //Check if target is identified
     if(!args[0]) return message.reply('you must include the user to mute! Try again.');
+    //Check that time is identified
+    if(!args[1]) return message.reply('you need to specify a time! Try again.');
 
+    //Find User
     var user = message.mentions.users.first();
-
     if(user == null || user == undefined) {
       try {
       user = client.users.cache.get(args[0]);
@@ -16,14 +26,13 @@ exports.run = (client, message, args, level) => {
       }
     }
     let member = message.guild.members.cache.get(user.id);
-    const reason = args.slice(2).join(" ");
-
     if(user == null || user == undefined) return message.reply('Invalid user! Try again.');
 
+    //Piece together reason
+    const reason = args.slice(2).join(" ");
 
-    if(member.roles.cache.find(r => r.name === "Moderator") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
-
-    if(!args[1]) return message.reply('you need to specify a time! Try again.');
+    //Check if target is a staff member
+    if(member.roles.cache.find(r => r.name === "Cat Core Council") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
 
     var muteTime = parseInt(args[1].slice(0, args[1].length - 1));
    	if (isNaN(muteTime)) return message.reply('that\'s not a number! Try again.');
@@ -48,11 +57,12 @@ exports.run = (client, message, args, level) => {
       return message.reply("you used an invalid time unit! You must use <d, h, m, s>.");
     }
 
+    //Warn user for numbers that aren't parsable
     if(muteTime * timeMultiply * 1000 > 2073600000) {
       message.channel.send("Since this number is longer than what the program can parse, muting them for this long will PERMANENTLY mute them.");
     }
 
-
+    //Stringify time
     var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
       weekday: "long",
@@ -71,23 +81,28 @@ exports.run = (client, message, args, level) => {
     var muteStatement = `${muteTime} ${unit}`;
     if(duration == "Permanent") muteStatement = "Permanent";
 
+    //Insert into table
     db.run("INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)", [message.guild.id, message.author.id, user.id, "Mute", muteStatement, reason, now]);
-    //message.reply("Warn Suceeded.");
+    const embed = new Discord.MessageEmbed()
+      .setTitle(`User ${user.username} was Muted.`)
+      .setColor("#ffff00")
+      .addField("Time: ", now)
+      .addField("Moderator: ", `<@!${message.author.id}>`)
+      .addField("Duration: ", `Mute (${duration})`)
+      .addField("Reason: ", reason);
 
-
-
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Muted.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Duration: ", `Mute (${duration})`).addField("Reason: ", reason);
-
+    //Give Target muted role
     let mutedRole = message.guild.roles.cache.find(role => role.name == "Muted");
     member.roles.add(mutedRole);
 
+    //If mute time is NOT permanent, set timer to remove muted role
     if(muteTime * timeMultiply * 1000 <= 2073600000) {
       setTimeout(() => {message.mentions.members.first().roles.remove(mutedRole);}, muteTime * timeMultiply * 1000);
     }
 
-
+    //Send necessary information to user
     message.guild.channels.cache.get(modlogchannelid).send(embed);
-    message.mentions.users.first().send("You were muted (" + muteStatement + ") for: " + reason);
+    message.mentions.users.first().send("You were muted (" + muteStatement + ") for: " + reason).catch(err => {});
     message.channel.send("Moderation Log Successful.")
     return;
 }

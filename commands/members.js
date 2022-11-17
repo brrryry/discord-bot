@@ -1,16 +1,23 @@
+/*
+File: members.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
-const sql = require('sqlite3').verbose();
-var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
 
 exports.run = (client, message, args, level) => {
-
+  //Check for role ping
+  if(message.mentions.roles.first()) return message.channel.send("No role was mentioned. Try again!");
+  //Get Role
   let chosenRole = message.mentions.roles.first();
 
   var embed = new Discord.MessageEmbed();
   var embedDesc = "";
   var count = 0;
 
+  //Find everyone with role
   let memberPromise = message.guild.members.cache.filter(member => {
     return member.roles.cache.find(r => r.id === chosenRole.id);
   }).forEach(member => {
@@ -18,6 +25,7 @@ exports.run = (client, message, args, level) => {
     embedDesc += `<@!${member.id}>\n`;
 
     if(count % 25 == 0) {
+      //Create a new column/section
       embed.addField('\u200b', embedDesc, true);
       embedDesc = "";
     }
@@ -28,8 +36,6 @@ exports.run = (client, message, args, level) => {
   embed.setColor("#D43FEB");
 
   return message.channel.send(embed);
-
-
 }
 
 exports.config = {

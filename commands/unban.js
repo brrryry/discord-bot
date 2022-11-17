@@ -1,41 +1,31 @@
-exports.run = async (client, message, args, level) => {
-  const Discord = require('discord.js');
-  const sql = require('sqlite3').verbose();
-  var db = new sql.Database("db.sqlite");
-  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+/*
+File: unban.js
+Contributors:
+  -vKitsu
+*/
 
+//Get Dependencies
+const Discord = require('discord.js');
+const sql = require('sqlite3').verbose();
+var db = new sql.Database("db.sqlite");
+
+exports.run = async (client, message, args, level) => {
+  //Check for user and reasons
   if(!args[0]) return message.reply(`you must include the user to ban! Try again.`);
   if(!args[1]) return message.reply(`you must give a reason! Try again.`);
   let userID = args[0];
   const reason = args.slice(1).join(" ");
 
+  //Check if the person is actually banned
   message.guild.fetchBans().then(async bans => {
     if(bans.size == 0) return message.reply("this person isn't banned! Try again.");
     let bUser = bans.find(b => b.user.id === userID);
     if(!bUser) return message.reply("this person isn't banned! Try again.");
-
-    var unappealable = false;
-
-
-    let unappealPromise = new Promise(resolve => {
-      db.all(`SELECT * FROM modlogs WHERE id = "${bUser.id}"`, (err, rows) => {
-        if(rows) {
-          rows.forEach(row => {
-            if(row.modtype === "uban") unappealable = true;
-          })
-        }
-      });
-
-      setTimeout(() => resolve("!"), 500);
-    });
-
-    let unappealResult = await unappealPromise;
-
-    if(unappealable) return message.reply("this person has an unappealed ban!");
-
+    //Otherwise, unban!
     message.guild.members.unban(bUser.user);
   });
 
+  //Stringify Time
   var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
       weekday: "long",
@@ -48,16 +38,24 @@ exports.run = async (client, message, args, level) => {
       timeZoneName: "short",
       timeZone: "America/New_York"
     });
-
+    
+    //Input into Table
     db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, message.author.id, userID, "Unban", 0, reason, now]);
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Unbanned.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
+    //Create/Customize embed
+    const embed = new Discord.MessageEmbed()
+      .setTitle(`User ${user.username} was Unbanned.`)
+      .setColor("#ffff00")
+      .addField("Time: ", now)
+      .addField("Moderator: ", `<@!${message.author.id}>`)
+      .addField("Reason: ", reason);
+    
+    //Send Necessary Data
     message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
-    message.mentions.users.first().send("You were Unbanned for: " + reason);
+    message.mentions.users.first().send("You were Unbanned for: " + reason).catch(err => {});
     message.mentions.users.first().unban();
     message.channel.send("Moderation Log Successful.")
     return;
 }
-
 
 exports.config = {
   name: "unban",

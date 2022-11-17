@@ -1,11 +1,14 @@
+/*
+File: membercount.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
-const sql = require('sqlite3').verbose();
-var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
 
 exports.run = (client, message, args, level) => {
-
-  var memberCount = 0;
+  var memberCount = 0; //Used to count members!
 
   let memberPromise = message.guild.members.cache.filter(member => {
     if(!member.user.bot) return member;
@@ -13,6 +16,7 @@ exports.run = (client, message, args, level) => {
     memberCount++;
   });
 
+  //Send Member Count!
   return message.channel.send(`Member Count: ${memberCount}`);
 
 

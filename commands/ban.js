@@ -56,7 +56,7 @@ exports.run = async (client, message, args, level) => {
       .addField("Reason: ", reason);
     message.guild.channels.cache.find(c => c.id == modlogchannelid).send(embed);
 
-    message.mentions.users.first().send("You were banned (appealable) for: " + reason); //DM Ban Notification
+    message.mentions.users.first().send("You were banned (appealable) for: " + reason).catch(err => {}); //DM Ban Notification
     message.mentions.members.first().ban(); //Ban
     message.channel.send("Moderation Log Successful.") //Report Successful Logs
     return;

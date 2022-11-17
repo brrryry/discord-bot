@@ -1,10 +1,16 @@
+/*
+File: leaderboard.js
+Contributors:
+  -vKitsu
+*/
+
+//Get Dependencies
 const Discord = require('discord.js');
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
-const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
 
 exports.run = (client, message, args, level) => {
-
+    //Enter Database, sort by XP count
     db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC LIMIT 15`, (err, rows) => {
       var embed = new Discord.MessageEmbed().setTitle("Most Active Members").setFooter("Our most active members!");
       var value = "";
@@ -14,11 +20,9 @@ exports.run = (client, message, args, level) => {
         value += `**${count}**. <@!${row.id}>: ${row.xpcount} XP (Level ${row.level})\n`;
       });
       embed.setDescription(value);
+      //send embed .-.
       return message.channel.send(embed);
     });
-
-
-
 }
 
 exports.config = {

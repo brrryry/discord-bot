@@ -1,12 +1,20 @@
-exports.run = async (client, message, args, level) => {
-  const Discord = require('discord.js');
-  const sql = require('sqlite3').verbose();
-  var db = new sql.Database("db.sqlite");
-  const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid} = require("../config.json"); //get the prefix, token, status and welcome channel id
+/*
+File: kick.js
+Contributors:
+  -vKitsu
+*/
 
+//Get Dependencies
+const Discord = require('discord.js');
+const sql = require('sqlite3').verbose();
+var db = new sql.Database("db.sqlite");
+  
+exports.run = async (client, message, args, level) => {
+  //Check for enough arguments
   if(!args[0]) return message.reply(`you must include the user to kick! Try again.`);
   if(!args[1]) return message.reply(`you must give a reason! Try again.`);
 
+  //Find Target (ID or ping)
   var user = message.mentions.users.first();
   if(user == null || user == undefined) {
     try {
@@ -15,13 +23,14 @@ exports.run = async (client, message, args, level) => {
       return message.reply('Couldn\'t get a Discord user with this userID!');
     }
   }
-
-  const reason = args.slice(1).join(" ");
   if(user == null || user == undefined) return message.reply("this user cannot be found!");
 
-  if(member.roles.cache.find(r => r.name === "Moderator") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+  //Piece together reason
+  const reason = args.slice(1).join(" ");
 
-
+  //Check if target is a staff member
+  if(member.roles.cache.find(r => r.name === "Cat Core Council") && message.author.id != "302923939154493441") return message.reply("you shouldn't be moderating other staff members!");
+  //Stringify Time
   var now = new Date().toLocaleDateString("en-US", {
       hourCycle: "h12",
       weekday: "long",
@@ -35,15 +44,21 @@ exports.run = async (client, message, args, level) => {
       timeZone: "America/New_York"
     });
 
+    //Input Modlog into Database
     db.run(`INSERT INTO modlogs (guild, moderator, offender, modtype, muteTime, reason, time) VALUES (?, ?, ?, ?, ?, ?, ?)`, [message.guild.id, message.author.id, user.id, "Kick", 0, reason, now]);
-    const embed = new Discord.MessageEmbed().setTitle(`User ${user.username} was Kicked.`).setColor("#ffff00").addField("Time: ", now).addField("Moderator: ", `<@!${message.author.id}>`).addField("Reason: ", reason);
-    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
-    message.mentions.users.first().send("You were kicked for: " + reason);
-    message.mentions.members.first().kick();
-    message.channel.send("Moderation Log Successful.")
-    return;
-}
+    //Create/Customize Embed
+    const embed = new Discord.MessageEmbed()
+      .setTitle(`User ${user.username} was Kicked.`)
+      .setColor("#ffff00")
+      .addField("Time: ", now)
+      .addField("Moderator: ", `<@!${message.author.id}>`)
+      .addField("Reason: ", reason);
 
+    message.guild.channels.cache.find(c => c.name === "modlogs").send(embed);
+    message.mentions.users.first().send("You were kicked for: " + reason).catch(err => {});
+    message.mentions.members.first().kick();
+    return message.channel.send("Moderation Log Successful.")
+}
 
 exports.config = {
   name: "kick",
