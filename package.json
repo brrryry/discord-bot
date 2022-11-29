@@ -1,32 +1,12 @@
 {
-  "name": "discord-bot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "vKitsu",
-  "license": "ISC",
   "dependencies": {
-    "@discordjs/opus": "^0.7.0",
-    "@discordjs/voice": "github:discordjs/voice",
+    "child_process": "^1.0.2",
     "curl": "^0.1.4",
-    "discord-youtube-api": "^0.1.0",
-    "discord-ytdl-core": "^5.0.4",
-    "discord.js": "^12.5.3",
-    "ffmpeg": "0.0.4",
-    "ffmpeg-static": "^4.4.1",
-    "fluent-ffmpeg": "^2.1.2",
-    "fs": "0.0.1-security",
-    "node-twitch": "^0.4.5",
-    "pm2": "^4.5.5",
+    "discord.js": "^14.7.0",
+    "fetch": "^1.1.0",
+    "fs": "^0.0.1-security",
+    "node-fetch": "^3.3.0",
     "request": "^2.88.2",
-    "sqlite3": "^5.1.2",
-    "twitch": "^4.6.7",
-    "twitch-cli": "^0.0.2",
-    "ytdl-core": "^4.11.2",
-    "ytpl": "^2.2.3",
-    "ytsr": "^3.6.0"
+    "sqlite3": "^5.1.2"
   }
 }

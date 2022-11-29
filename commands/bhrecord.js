@@ -8,7 +8,7 @@ Contributors:
 const Discord = require('discord.js');
 const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
-const fetch = require("node-fetch");
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const {k_score, score_constant} = require("../config.json"); //get config stuff
 
 

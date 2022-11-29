@@ -5,10 +5,10 @@ Contributors:
 */
 
 //Basic Requirements/Dependencies
-const Discord = require('discord.js');
+const {Client, Collection, intents} = require('discord.js');
 const curl = require('curl');
 const request = require('request');
-const fetch = require("node-fetch").default;
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 var exec = require('child_process').exec;
 const fs = require ("fs");
 const {prefix, token, status, gatewaychannelid, modlogchannelid, messagechannelid, twitchusername} = require("./config.json"); //get config variables
@@ -19,8 +19,8 @@ const sql = require('sqlite3').verbose();
 var db = new sql.Database("db.sqlite");
 
 //Map Commands for Dynamic + Automatic Command Adding
-const client = new Discord.Client();
-client.commands = new Discord.Collection();
+const client = new Client({intents: [7796]});
+client.commands = new Collection();
 
 //Song Queues
 global.squeue = new Map();
