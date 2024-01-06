@@ -1,5 +1,5 @@
-./db.sqlite
-./db.sqlite-journal
-./config.json
-./node_modules/**
-./.env
+db.sqlite
+db.sqlite-journal
+config.json
+node_modules/*
+.env
