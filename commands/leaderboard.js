@@ -5,25 +5,30 @@ Contributors:
 */
 
 //Get Dependencies
-const Discord = require('discord.js');
-const sql = require('sqlite3').verbose();
-var db = new sql.Database("db.sqlite");
+const Discord = require("discord.js");
 
-exports.run = (client, message, args, level) => {
-    //Enter Database, sort by XP count
-    db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC LIMIT 15`, (err, rows) => {
-      var embed = new Discord.MessageEmbed().setTitle("Most Active Members").setFooter("Our most active members!");
-      var value = "";
-      var count = 0;
-      rows.forEach(row => {
-        count++;
-        value += `**${count}**. <@!${row.id}>: ${row.xpcount} XP (Level ${row.level})\n`;
-      });
-      embed.setDescription(value);
-      //send embed .-.
-      return message.channel.send(embed);
-    });
-}
+const { AsyncDatabase } = require("promised-sqlite3");
+
+exports.run = async (client, message, args, level) => {
+  const db = await AsyncDatabase.open("db.sqlite");
+  //Enter Database, sort by XP count
+  const rows = await db.all(`SELECT * FROM xp ORDER BY xp DESC LIMIT 15`);
+
+  let embed = new Discord.EmbedBuilder()
+    .setTitle("Most Active Members")
+    .setColor(0x6a5b8e)
+    .setFooter({ text: "Our most active members!" });
+  var value = "";
+  var count = 0;
+  rows.forEach((row) => {
+    count++;
+    value += `**${count}**. <@!${row.id}>: ${row.xp} XP (Level ${row.level})\n`;
+  });
+  embed.setDescription(value);
+  //send embed .-.
+  await db.close();
+  return message.channel.send({ embeds: [embed] });
+};
 
 exports.config = {
   name: "leaderboard",
@@ -31,5 +36,5 @@ exports.config = {
   description: "The most active people in the server.",
   category: "misc",
   permissionLevel: 0,
-  aliases: ['lb']
+  aliases: ["lb"],
 };

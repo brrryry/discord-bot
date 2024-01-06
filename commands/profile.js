@@ -6,21 +6,19 @@ Contributors:
 
 //Get Dependencies
 const Discord = require("discord.js");
-const sql = require('sqlite3').verbose();
-var db = new sql.Database("db.sqlite");
+const { AsyncDatabase } = require("promised-sqlite3");
 
 exports.run = async (client, message, args, level) => {
+  const db = await AsyncDatabase.open("db.sqlite");
   //Creating embed
-  let Embed = new Discord.MessageEmbed();
+  let Embed = new Discord.EmbedBuilder();
   let roles = []; //used to store list of roles
-
-  const memberList = message.guild.members.cache.map(m => m.id); //get all members, map their ids
 
   //Make variables to find IDs
   var member1 = message.member;
-  var id = member1.id
+  var id = member1.id;
 
-  if(args[0]) {
+  if (args[0]) {
     try {
       member1 = message.guild.members.cache.get(args[0]);
       id = args[0];
@@ -35,30 +33,26 @@ exports.run = async (client, message, args, level) => {
   }
 
   member1.roles.cache.forEach((role) => {
-    if(role.name != "everyone") roles.push(role);
+    if (role.name !== "@everyone") roles.push(role);
   });
+
   Embed.setTitle(`Your avatar!`);
   Embed.setThumbnail(member1.user.displayAvatarURL());
-  Embed.setColor(`RANDOM`);
+  Embed.setColor(0x6a5b8e);
 
   var count = 1;
   var found = false;
   var rankxp = "";
 
-  let getRankPromise = new Promise(resolve => {
-    db.all(`SELECT * FROM xp WHERE guild = "${message.guild.id}" ORDER BY xpcount DESC`, (err, rows) => {
-      if(!rows || rows.length == 0) return message.reply("This person isn't initialized in the database!")
-      rows.forEach(row => {
-        if(row.id == id && row.guild == message.guild.id) {
-          rankxp += `Rank: ${count} (Level ${row.level} | ${row.xpcount} XP)`;
-          resolve(rankxp);
-        }
-        count++;
-      });
-    });
+  let rows = await db.all(`SELECT * FROM xp ORDER BY xp DESC`);
+
+  if (!rows || rows.length == 0)
+    return message.reply("This person isn't initialized in the database!");
+  rows.forEach((row) => {
+    if (row.id === id)
+      rankxp += `Rank: ${count} (Level ${row.level} | ${row.xp} XP)`;
+    else count++;
   });
-  let gotRank = await getRankPromise;
-  if(rankxp == "") return message.channel.send(`This person isn't initialized in the database!`);
 
   //Customize/Send Embed
   Embed.setDescription(
@@ -66,8 +60,8 @@ exports.run = async (client, message, args, level) => {
       member1.id
     }\nPing: <@!${id}>\nRoles: \n${roles}\n\n${rankxp}`
   );
-  return message.channel.send(Embed);
-}
+  return message.channel.send({ embeds: [Embed] });
+};
 
 exports.config = {
   name: "profile",
@@ -75,5 +69,5 @@ exports.config = {
   description: "Gets a server profile!",
   category: "misc",
   permissionLevel: 0,
-  aliases: ['avatar']
+  aliases: ["avatar, me"],
 };

@@ -48,7 +48,7 @@ exports.run = (client, message, args, level) => {
   }
 
   //Create/Customize embed
-  var embed = new Discord.MessageEmbed().setTitle("Help Hub!");
+  var embed = new Discord.EmbedBuilder().setTitle("Help Hub!");
   var descValue = "";
   descValue += `The prefix of this bot is currently \`\`${prefix}\`\`.\n\nCurrent Categories: `;
 
@@ -60,7 +60,7 @@ exports.run = (client, message, args, level) => {
   embed.setDescription(descValue);
   embed.setColor("#D43FEB");
 
-  return message.channel.send(embed);
+  return message.channel.send({embeds: [embed]});
 
 }
 
@@ -70,5 +70,5 @@ exports.config = {
   description: "Get some help!",
   category: "utility",
   permissionLevel: 0,
-  aliases: ['helpmepls', 'halp', 'stuck', 'oof']
+  aliases: ['helpmepls', 'halp', 'stuck']
 };

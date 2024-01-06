@@ -5,14 +5,12 @@ Contributors:
 */
 
 //Get Dependencies
-const Discord = require('discord.js');
-const sql = require('sqlite3').verbose();
-var db = new sql.Database("db.sqlite");
+const Discord = require("discord.js");
 
 exports.run = (client, message, args, level) => {
-  //Return user's permission level  
+  //Return user's permission level
   return message.channel.send(`You are level ${level}!`);
-}
+};
 
 exports.config = {
   name: "mylevel",
@@ -20,5 +18,5 @@ exports.config = {
   description: "Get your bot permission level!",
   category: "misc",
   permissionLevel: 0,
-  aliases: ['ml']
+  aliases: ["ml"],
 };
